@@ -230,14 +230,21 @@ class _HomeScreenState extends State<HomeScreen> {
               title: Text(gasto.nombre, style: textStyle.copyWith(fontWeight: FontWeight.bold)),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text('Paga el día ${gasto.diaDePago}', style: textStyle),
                   if (gasto.descripcion != null && gasto.descripcion!.isNotEmpty)
-                    Text(gasto.descripcion!, style: textStyle.copyWith(fontSize: 12)),
+                    Text(
+                      gasto.descripcion!,
+                      style: textStyle.copyWith(fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
                   if (gasto.categoria != null && gasto.categoria!.isNotEmpty)
                     Text(
                       'Categoría: ${gasto.categoria!}',
                       style: textStyle.copyWith(fontSize: 12, fontStyle: FontStyle.italic),
+                      overflow: TextOverflow.ellipsis,
                     ),
                 ],
               ),
