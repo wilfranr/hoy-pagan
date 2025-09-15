@@ -1,5 +1,4 @@
 
-import 'dart:convert';
 
 /// Modelo de datos para representar un gasto.
 ///
@@ -10,12 +9,16 @@ class Gasto {
   double monto;
   int diaDePago;
   bool pagado;
+  String? descripcion;
+  String? categoria;
 
   Gasto({
     required this.nombre,
     required this.monto,
     required this.diaDePago,
     required this.pagado,
+    this.descripcion,
+    this.categoria,
   });
 
   /// Convierte la instancia de Gasto a un mapa (JSON).
@@ -25,6 +28,8 @@ class Gasto {
       'monto': monto,
       'diaDePago': diaDePago,
       'pagado': pagado,
+      'descripcion': descripcion,
+      'categoria': categoria,
     };
   }
 
@@ -38,6 +43,8 @@ class Gasto {
       monto: monto,
       diaDePago: json['diaDePago'],
       pagado: json['pagado'],
+      descripcion: json['descripcion'],
+      categoria: json['categoria'],
     );
   }
 }

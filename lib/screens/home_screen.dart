@@ -107,6 +107,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Muestra el formulario para agregar un nuevo gasto.
+  void _mostrarFormularioAgregarGasto() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return _FormularioAgregarGasto(
+          onGastoAgregado: (gasto) {
+            setState(() {
+              _listaDeGastos.add(gasto);
+            });
+            _saveData();
+            Navigator.of(context).pop();
+          },
+        );
+      },
+    );
+  }
+
   // --- CONSTRUCCIÓN DE LA UI ---
 
   @override
@@ -130,6 +148,11 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildGastosList(),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _mostrarFormularioAgregarGasto,
+        backgroundColor: Colors.blue.shade600,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -205,7 +228,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               title: Text(gasto.nombre, style: textStyle.copyWith(fontWeight: FontWeight.bold)),
-              subtitle: Text('Paga el día ${gasto.diaDePago}', style: textStyle),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Paga el día ${gasto.diaDePago}', style: textStyle),
+                  if (gasto.descripcion != null && gasto.descripcion!.isNotEmpty)
+                    Text(gasto.descripcion!, style: textStyle.copyWith(fontSize: 12)),
+                  if (gasto.categoria != null && gasto.categoria!.isNotEmpty)
+                    Text(
+                      'Categoría: ${gasto.categoria!}',
+                      style: textStyle.copyWith(fontSize: 12, fontStyle: FontStyle.italic),
+                    ),
+                ],
+              ),
               trailing: Text(
                 _currencyFormatter.format(gasto.monto),
                 style: textStyle.copyWith(fontSize: 15),
@@ -215,5 +250,149 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
     );
+  }
+}
+
+/// Formulario para agregar un nuevo gasto.
+class _FormularioAgregarGasto extends StatefulWidget {
+  final Function(Gasto) onGastoAgregado;
+
+  const _FormularioAgregarGasto({required this.onGastoAgregado});
+
+  @override
+  State<_FormularioAgregarGasto> createState() => _FormularioAgregarGastoState();
+}
+
+class _FormularioAgregarGastoState extends State<_FormularioAgregarGasto> {
+  final _formKey = GlobalKey<FormState>();
+  final _nombreController = TextEditingController();
+  final _montoController = TextEditingController();
+  final _diaController = TextEditingController();
+  final _descripcionController = TextEditingController();
+  final _categoriaController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _montoController.dispose();
+    _diaController.dispose();
+    _descripcionController.dispose();
+    _categoriaController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Agregar Nuevo Gasto'),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _nombreController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre del gasto *',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'El nombre es obligatorio';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _montoController,
+                decoration: const InputDecoration(
+                  labelText: 'Monto *',
+                  border: OutlineInputBorder(),
+                  prefixText: '\$ ',
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'El monto es obligatorio';
+                  }
+                  final monto = double.tryParse(value);
+                  if (monto == null || monto <= 0) {
+                    return 'Ingrese un monto válido';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _diaController,
+                decoration: const InputDecoration(
+                  labelText: 'Día de pago (1-31) *',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'El día de pago es obligatorio';
+                  }
+                  final dia = int.tryParse(value);
+                  if (dia == null || dia < 1 || dia > 31) {
+                    return 'Ingrese un día válido (1-31)';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _descripcionController,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción (opcional)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _categoriaController,
+                decoration: const InputDecoration(
+                  labelText: 'Categoría (opcional)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: _agregarGasto,
+          child: const Text('Agregar'),
+        ),
+      ],
+    );
+  }
+
+  void _agregarGasto() {
+    if (_formKey.currentState!.validate()) {
+      final gasto = Gasto(
+        nombre: _nombreController.text.trim(),
+        monto: double.parse(_montoController.text),
+        diaDePago: int.parse(_diaController.text),
+        pagado: false,
+        descripcion: _descripcionController.text.trim().isEmpty 
+            ? null 
+            : _descripcionController.text.trim(),
+        categoria: _categoriaController.text.trim().isEmpty 
+            ? null 
+            : _categoriaController.text.trim(),
+      );
+      
+      widget.onGastoAgregado(gasto);
+    }
   }
 }
