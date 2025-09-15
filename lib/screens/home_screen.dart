@@ -17,6 +17,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final double _ingresoMensual = 2000000.0;
   double _saldoDisponible = 0.0;
   List<Gasto> _listaDeGastos = [];
+  final List<Gasto> _listaDePagosPendientes = [
+    Gasto(nombre: 'Tarjeta de Crédito', monto: 250000, diaDePago: 25, pagado: false),
+    Gasto(nombre: 'Suscripción App', monto: 20000, diaDePago: 28, pagado: false),
+  ];
 
   // Formateador de moneda para la UI.
   final _currencyFormatter = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
@@ -134,19 +138,24 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Control de Gastos'),
         backgroundColor: Colors.blue.shade800,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildSaldoCard(),
-            const SizedBox(height: 24),
-            _buildPagoButton(),
-            const SizedBox(height: 24),
-            const Text('Gastos del Mes', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const Divider(),
-            _buildGastosList(),
-          ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildSaldoCard(),
+              const SizedBox(height: 24),
+              _buildPagoButton(),
+              const SizedBox(height: 24),
+              const Text('Actividad reciente', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const Divider(),
+              _buildGastosList(),
+              const SizedBox(height: 16),
+              const Divider(),
+              _buildProximosPagosSection(),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -191,71 +200,114 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildGastosList() {
-    return Expanded(
-      child: ListView.builder(
-        itemCount: _listaDeGastos.length,
-        itemBuilder: (context, index) {
-          final gasto = _listaDeGastos[index];
-          final textStyle = TextStyle(
-            decoration: gasto.pagado ? TextDecoration.lineThrough : TextDecoration.none,
-            color: gasto.pagado ? Colors.grey.shade600 : Colors.black87,
-            fontStyle: gasto.pagado ? FontStyle.italic : FontStyle.normal,
-          );
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _listaDeGastos.length,
+      itemBuilder: (context, index) {
+        final gasto = _listaDeGastos[index];
+        final textStyle = TextStyle(
+          decoration: gasto.pagado ? TextDecoration.lineThrough : TextDecoration.none,
+          color: gasto.pagado ? Colors.grey.shade600 : Colors.black87,
+          fontStyle: gasto.pagado ? FontStyle.italic : FontStyle.normal,
+        );
 
-          return Card(
-            elevation: 2.0,
-            margin: const EdgeInsets.symmetric(vertical: 6.0),
-            child: ListTile(
-              leading: Checkbox(
-                value: gasto.pagado,
-                onChanged: (bool? value) {
-                  setState(() {
-                    if (value == true) {
-                      if (_saldoDisponible >= gasto.monto) {
-                        gasto.pagado = true;
-                        _saldoDisponible -= gasto.monto;
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Saldo insuficiente para pagar este gasto.'), backgroundColor: Colors.red),
-                        );
-                      }
+        return Card(
+          elevation: 2.0,
+          margin: const EdgeInsets.symmetric(vertical: 6.0),
+          child: ListTile(
+            leading: Checkbox(
+              value: gasto.pagado,
+              onChanged: (bool? value) {
+                setState(() {
+                  if (value == true) {
+                    if (_saldoDisponible >= gasto.monto) {
+                      gasto.pagado = true;
+                      _saldoDisponible -= gasto.monto;
                     } else {
-                      gasto.pagado = false;
-                      _saldoDisponible += gasto.monto;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Saldo insuficiente para pagar este gasto.'), backgroundColor: Colors.red),
+                      );
                     }
-                    _saveData();
-                  });
-                },
-              ),
-              title: Text(gasto.nombre, style: textStyle.copyWith(fontWeight: FontWeight.bold)),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Paga el día ${gasto.diaDePago}', style: textStyle),
-                  if (gasto.descripcion != null && gasto.descripcion!.isNotEmpty)
-                    Text(
-                      gasto.descripcion!,
-                      style: textStyle.copyWith(fontSize: 12),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                    ),
-                  if (gasto.categoria != null && gasto.categoria!.isNotEmpty)
-                    Text(
-                      'Categoría: ${gasto.categoria!}',
-                      style: textStyle.copyWith(fontSize: 12, fontStyle: FontStyle.italic),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
-              ),
-              trailing: Text(
-                _currencyFormatter.format(gasto.monto),
-                style: textStyle.copyWith(fontSize: 15),
-              ),
+                  } else {
+                    gasto.pagado = false;
+                    _saldoDisponible += gasto.monto;
+                  }
+                  _saveData();
+                });
+              },
             ),
-          );
-        },
-      ),
+            title: Text(gasto.nombre, style: textStyle.copyWith(fontWeight: FontWeight.bold)),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Paga el día ${gasto.diaDePago}', style: textStyle),
+                if (gasto.descripcion != null && gasto.descripcion!.isNotEmpty)
+                  Text(
+                    gasto.descripcion!,
+                    style: textStyle.copyWith(fontSize: 12),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                  ),
+                if (gasto.categoria != null && gasto.categoria!.isNotEmpty)
+                  Text(
+                    'Categoría: ${gasto.categoria!}',
+                    style: textStyle.copyWith(fontSize: 12, fontStyle: FontStyle.italic),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
+            ),
+            trailing: Text(
+              _currencyFormatter.format(gasto.monto),
+              style: textStyle.copyWith(fontSize: 15),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProximosPagosSection() {
+    return ExpansionTile(
+      title: const Text('Próximos pagos', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+      children: [
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _listaDePagosPendientes.length,
+          itemBuilder: (context, index) {
+            final gasto = _listaDePagosPendientes[index];
+            final textStyle = TextStyle(
+              decoration: gasto.pagado ? TextDecoration.lineThrough : TextDecoration.none,
+              color: gasto.pagado ? Colors.grey.shade600 : Colors.black87,
+              fontStyle: gasto.pagado ? FontStyle.italic : FontStyle.normal,
+            );
+            return Card(
+              elevation: 2.0,
+              margin: const EdgeInsets.symmetric(vertical: 6.0),
+              child: ListTile(
+                leading: Checkbox(
+                  value: gasto.pagado,
+                  onChanged: (bool? value) {
+                    // NOTE: This is a simplified version of the payment logic.
+                    // A real app would have more complex state management.
+                    setState(() {
+                      gasto.pagado = value ?? false;
+                    });
+                  },
+                ),
+                title: Text(gasto.nombre, style: textStyle.copyWith(fontWeight: FontWeight.bold)),
+                subtitle: Text('Paga el día ${gasto.diaDePago}', style: textStyle),
+                trailing: Text(
+                  _currencyFormatter.format(gasto.monto),
+                  style: textStyle.copyWith(fontSize: 15),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }
