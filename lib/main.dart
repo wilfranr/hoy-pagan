@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'app_themes.dart';
 import 'screens/theme_selector_screen.dart';
+import 'utils/formatters.dart';
 
 // Modelo de datos
 class Categoria {
@@ -497,7 +499,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Función para formatear moneda
   String formatoMoneda(double monto) {
-    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$');
+    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
     return currencyFormat.format(monto);
   }
 
@@ -711,7 +713,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _mostrarDialogoIngresoRecurrente(TransaccionRecurrente transaccion) {
-    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$');
+    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
     
     showDialog(
       context: context,
@@ -788,7 +790,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _mostrarDialogoGastoRecurrente(TransaccionRecurrente transaccion) {
-    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$');
+    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
     
     showDialog(
       context: context,
@@ -894,7 +896,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Ingreso de ${NumberFormat.currency(locale: 'es_CO', symbol: '\$').format(transaccion.monto)} registrado'),
+          content: Text('Ingreso de ${NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0).format(transaccion.monto)} registrado'),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 3),
         ),
@@ -935,7 +937,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gasto de ${NumberFormat.currency(locale: 'es_CO', symbol: '\$').format(transaccion.monto)} registrado'),
+          content: Text('Gasto de ${NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0).format(transaccion.monto)} registrado'),
           backgroundColor: const Color(0xFF2EA198),
           duration: const Duration(seconds: 3),
         ),
@@ -1279,6 +1281,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     TextField(
                       controller: montoController,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        ThousandsSeparatorInputFormatter(),
+                      ],
                       decoration: const InputDecoration(
                         labelText: 'Monto',
                         prefixText: '\$ ',
@@ -1500,7 +1506,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       return;
                     }
 
-                    final monto = double.tryParse(montoController.text);
+                    final monto = parseMonto(montoController.text);
                     if (monto == null || monto <= 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -1676,7 +1682,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$');
+    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
     
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -2278,7 +2284,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$');
+    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
     
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -2835,7 +2841,7 @@ class _FormularioGastoFijoScreenState extends State<FormularioGastoFijoScreen> {
       // Crear nueva transacción recurrente de gasto
       final nuevaTransaccion = TransaccionRecurrente.nueva(
         descripcion: _descripcionController.text,
-        monto: double.parse(_montoController.text),
+        monto: parseMonto(_montoController.text),
         tipo: 'gasto',
         fechaInicio: _fechaInicio,
         frecuencia: _frecuencia,
@@ -2944,6 +2950,10 @@ class _FormularioGastoFijoScreenState extends State<FormularioGastoFijoScreen> {
             TextFormField(
               controller: _montoController,
               keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                ThousandsSeparatorInputFormatter(),
+              ],
               decoration: const InputDecoration(
                 labelText: 'Monto del Gasto',
                 prefixText: '\$ ',
@@ -2958,7 +2968,8 @@ class _FormularioGastoFijoScreenState extends State<FormularioGastoFijoScreen> {
                 if (value == null || value.isEmpty) {
                   return 'Por favor ingresa el monto';
                 }
-                if (double.tryParse(value) == null || double.parse(value) <= 0) {
+                final monto = parseMonto(value);
+                if (monto <= 0) {
                   return 'Por favor ingresa un monto válido';
                 }
                 return null;
@@ -3388,7 +3399,7 @@ class _FormularioIngresoFijoScreenState extends State<FormularioIngresoFijoScree
       // Crear nueva transacción recurrente de ingreso
       final nuevaTransaccion = TransaccionRecurrente.nueva(
         descripcion: _descripcionController.text,
-        monto: double.parse(_montoController.text),
+        monto: parseMonto(_montoController.text),
         tipo: 'ingreso',
         fechaInicio: _fechaInicio,
         frecuencia: _frecuencia,
@@ -3499,6 +3510,10 @@ class _FormularioIngresoFijoScreenState extends State<FormularioIngresoFijoScree
             TextFormField(
               controller: _montoController,
               keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                ThousandsSeparatorInputFormatter(),
+              ],
               decoration: const InputDecoration(
                 labelText: 'Monto del Ingreso',
                 prefixText: '\$ ',
@@ -3513,7 +3528,8 @@ class _FormularioIngresoFijoScreenState extends State<FormularioIngresoFijoScree
                 if (value == null || value.isEmpty) {
                   return 'Por favor ingresa el monto';
                 }
-                if (double.tryParse(value) == null || double.parse(value) <= 0) {
+                final monto = parseMonto(value);
+                if (monto <= 0) {
                   return 'Por favor ingresa un monto válido';
                 }
                 return null;
@@ -3920,7 +3936,7 @@ class _FormularioGastoScreenState extends State<FormularioGastoScreen> {
           ? Gasto(
               id: widget.gasto!.id,
               nombre: _nombreController.text,
-              monto: double.parse(_montoController.text),
+              monto: parseMonto(_montoController.text),
               diaDePago: int.parse(_diaController.text),
               pagado: widget.gasto!.pagado,
               esRecurrente: _esRecurrente,
@@ -3929,7 +3945,7 @@ class _FormularioGastoScreenState extends State<FormularioGastoScreen> {
             )
           : Gasto.nuevo(
               nombre: _nombreController.text,
-              monto: double.parse(_montoController.text),
+              monto: parseMonto(_montoController.text),
               diaDePago: int.parse(_diaController.text),
               esRecurrente: _esRecurrente,
               fechaVencimiento: _fechaVencimiento,
@@ -4838,7 +4854,7 @@ class _FormularioRecurrenteScreenState extends State<FormularioRecurrenteScreen>
       // Crear nueva transacción recurrente
       final nuevaTransaccion = TransaccionRecurrente.nueva(
         descripcion: _descripcionController.text,
-        monto: double.parse(_montoController.text),
+        monto: parseMonto(_montoController.text),
         tipo: tipo,
         fechaInicio: _fechaInicio,
         frecuencia: _frecuencia,
@@ -4977,6 +4993,10 @@ class _FormularioRecurrenteScreenState extends State<FormularioRecurrenteScreen>
             TextFormField(
               controller: _montoController,
               keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                ThousandsSeparatorInputFormatter(),
+              ],
               decoration: const InputDecoration(
                 labelText: 'Transferir',
                 prefixText: '\$ ',
@@ -4991,7 +5011,8 @@ class _FormularioRecurrenteScreenState extends State<FormularioRecurrenteScreen>
                 if (value == null || value.isEmpty) {
                   return 'Por favor ingresa el monto';
                 }
-                if (double.tryParse(value) == null || double.parse(value) <= 0) {
+                final monto = parseMonto(value);
+                if (monto <= 0) {
                   return 'Por favor ingresa un monto válido';
                 }
                 return null;

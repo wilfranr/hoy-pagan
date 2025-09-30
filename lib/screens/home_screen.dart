@@ -2,6 +2,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
+import '../utils/formatters.dart';
 import 'package:intl/intl.dart';
 import '../models/gasto_model.dart';
 
@@ -320,12 +322,16 @@ class _FormularioAgregarGastoState extends State<_FormularioAgregarGasto> {
                   prefixText: '\$ ',
                 ),
                 keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  ThousandsSeparatorInputFormatter(),
+                ],
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'El monto es obligatorio';
                   }
-                  final monto = double.tryParse(value);
-                  if (monto == null || monto <= 0) {
+                  final monto = parseMonto(value);
+                  if (monto <= 0) {
                     return 'Ingrese un monto válido';
                   }
                   return null;
@@ -388,7 +394,7 @@ class _FormularioAgregarGastoState extends State<_FormularioAgregarGasto> {
     if (_formKey.currentState!.validate()) {
       final gasto = Gasto(
         nombre: _nombreController.text.trim(),
-        monto: double.parse(_montoController.text),
+        monto: parseMonto(_montoController.text),
         diaDePago: int.parse(_diaController.text),
         pagado: false,
         descripcion: _descripcionController.text.trim().isEmpty 
