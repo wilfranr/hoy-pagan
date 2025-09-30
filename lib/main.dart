@@ -1329,7 +1329,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return null;
                       },
                     ),
-                    if (tipo == 'ingreso') ...[
+                    if (tipo == 'ingreso' || tipo == 'gasto') ...[
                       const SizedBox(height: 16),
                       SwitchListTile.adaptive(
                         title: const Text('¿Es un ingreso recurrente?'),
@@ -1511,8 +1511,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       return;
                     }
 
-                    // Lógica diferenciada para ingreso recurrente
-                    if (tipo == 'ingreso' && esRecurrente) {
+                    // Lógica diferenciada para ingresos/gastos recurrentes
+                    if ((tipo == 'ingreso' || tipo == 'gasto') && esRecurrente) {
                       // Validaciones adicionales
                       if (fechaInicio == null ||
                           frecuenciaSeleccionada == null ||
@@ -1565,7 +1565,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       final nuevaRecurrente = TransaccionRecurrente.nueva(
                         descripcion: descripcionController.text,
                         monto: monto,
-                        tipo: 'ingreso',
+                        tipo: tipo,
                         fechaInicio: fechaInicio!,
                         frecuencia: frecuenciaSeleccionada!,
                         condicionFin: condicionFinSeleccionada!,
@@ -1587,14 +1587,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         if (inicio.isBefore(hoySolo) || inicio.isAtSameMomentAs(hoySolo)) {
                           final primera = Transaccion(
                             id: const Uuid().v4(),
-                            tipo: 'ingreso',
+                            tipo: tipo,
                             monto: monto,
                             descripcion: descripcionController.text,
                             fecha: inicio,
                             categoriaId: categoriaSeleccionada!,
                           );
                           listaDeTransacciones.add(primera);
-                          saldoDisponible += monto;
+                          if (tipo == 'ingreso') {
+                            saldoDisponible += monto;
+                          } else {
+                            // gasto
+                            saldoDisponible -= monto;
+                          }
                         }
                       });
 
