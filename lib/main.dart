@@ -1237,6 +1237,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final TextEditingController montoController = TextEditingController();
     final TextEditingController descripcionController = TextEditingController();
     String? categoriaSeleccionada;
+    // Estado local para ingresos recurrentes (sólo aplica cuando tipo == 'ingreso')
+    bool esRecurrente = false;
+    DateTime? fechaInicio;
+    String? frecuenciaSeleccionada; // 'semanal', 'mensual', 'anual'
+    String? condicionFinSeleccionada; // 'nunca', 'numero_pagos', 'fecha_especifica'
+    final TextEditingController numeroPagosController = TextEditingController();
+    DateTime? fechaFinSeleccionada;
     
     // Títulos dinámicos según el tipo
     String titulo = '';
@@ -1322,6 +1329,152 @@ class _HomeScreenState extends State<HomeScreen> {
                         return null;
                       },
                     ),
+                    if (tipo == 'ingreso') ...[
+                      const SizedBox(height: 16),
+                      SwitchListTile.adaptive(
+                        title: const Text('¿Es un ingreso recurrente?'),
+                        value: esRecurrente,
+                        onChanged: (v) {
+                          setState(() {
+                            esRecurrente = v;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      if (esRecurrente) ...[
+                        const SizedBox(height: 8),
+                        // Fecha de inicio
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Fecha de inicio',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: () async {
+                              final hoy = DateTime.now();
+                              final seleccionada = await showDatePicker(
+                                context: context,
+                                initialDate: fechaInicio ?? hoy,
+                                firstDate: DateTime(hoy.year - 2),
+                                lastDate: DateTime(hoy.year + 5),
+                              );
+                              if (seleccionada != null) {
+                                setState(() {
+                                  fechaInicio = DateTime(
+                                    seleccionada.year,
+                                    seleccionada.month,
+                                    seleccionada.day,
+                                  );
+                                });
+                              }
+                            },
+                            child: Text(
+                              fechaInicio == null
+                                  ? 'Seleccionar fecha'
+                                  : DateFormat.yMMMMd('es').format(fechaInicio!),
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Frecuencia
+                        DropdownButtonFormField<String>(
+                          value: frecuenciaSeleccionada,
+                          decoration: const InputDecoration(
+                            labelText: 'Repetir',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'semanal', child: Text('Semanal')),
+                            DropdownMenuItem(value: 'mensual', child: Text('Mensual')),
+                            DropdownMenuItem(value: 'anual', child: Text('Anual')),
+                          ],
+                          onChanged: (v) {
+                            setState(() {
+                              frecuenciaSeleccionada = v;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        // Condición de finalización
+                        DropdownButtonFormField<String>(
+                          value: condicionFinSeleccionada,
+                          decoration: const InputDecoration(
+                            labelText: 'Hasta',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'nunca', child: Text('Nunca')),
+                            DropdownMenuItem(value: 'numero_pagos', child: Text('Número de pagos')),
+                            DropdownMenuItem(value: 'fecha_especifica', child: Text('Fecha específica')),
+                          ],
+                          onChanged: (v) {
+                            setState(() {
+                              condicionFinSeleccionada = v;
+                              // Limpiar valores al cambiar
+                              numeroPagosController.text = '';
+                              fechaFinSeleccionada = null;
+                            });
+                          },
+                        ),
+                        if (condicionFinSeleccionada == 'numero_pagos') ...[
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: numeroPagosController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Cantidad de pagos',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ],
+                        if (condicionFinSeleccionada == 'fecha_especifica') ...[
+                          const SizedBox(height: 16),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Fecha de finalización',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: () async {
+                                final base = fechaInicio ?? DateTime.now();
+                                final seleccionada = await showDatePicker(
+                                  context: context,
+                                  initialDate: fechaFinSeleccionada ?? base,
+                                  firstDate: base,
+                                  lastDate: DateTime(base.year + 10),
+                                );
+                                if (seleccionada != null) {
+                                  setState(() {
+                                    fechaFinSeleccionada = DateTime(
+                                      seleccionada.year,
+                                      seleccionada.month,
+                                      seleccionada.day,
+                                    );
+                                  });
+                                }
+                              },
+                              child: Text(
+                                fechaFinSeleccionada == null
+                                    ? 'Seleccionar fecha'
+                                    : DateFormat.yMMMMd('es').format(fechaFinSeleccionada!),
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ],
                   ],
                 ),
               ),
@@ -1358,45 +1511,143 @@ class _HomeScreenState extends State<HomeScreen> {
                       return;
                     }
 
-                    // Crear nueva transacción
-                    final nuevaTransaccion = Transaccion.nueva(
-                      tipo: tipo,
-                      monto: monto,
-                      descripcion: descripcionController.text,
-                      categoriaId: categoriaSeleccionada!,
-                    );
-
-                    // Cerrar diálogo primero
-                    Navigator.of(context).pop();
-
-                    // Actualizar estado del widget principal
-                    setState(() {
-                      listaDeTransacciones.add(nuevaTransaccion);
-                      
-                      // Actualizar saldo según el tipo
-                      if (tipo == 'ingreso') {
-                        saldoDisponible += monto;
-                      } else {
-                        // Para gasto, ahorro e inversión se resta del saldo
-                        saldoDisponible -= monto;
+                    // Lógica diferenciada para ingreso recurrente
+                    if (tipo == 'ingreso' && esRecurrente) {
+                      // Validaciones adicionales
+                      if (fechaInicio == null ||
+                          frecuenciaSeleccionada == null ||
+                          condicionFinSeleccionada == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Completa los campos de recurrencia'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
                       }
-                    });
 
-                    // Guardar datos
-                    await _guardarDatos();
+                      dynamic valorFin;
+                      if (condicionFinSeleccionada == 'numero_pagos') {
+                        final n = int.tryParse(numeroPagosController.text);
+                        if (n == null || n <= 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Ingresa un número de pagos válido'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+                        valorFin = n;
+                      } else if (condicionFinSeleccionada == 'fecha_especifica') {
+                        if (fechaFinSeleccionada == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Selecciona la fecha de finalización'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+                        if (fechaInicio!.isAfter(fechaFinSeleccionada!)) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('La fecha fin debe ser posterior a inicio'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+                        valorFin = fechaFinSeleccionada;
+                      }
 
-                    // Mostrar confirmación
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('$titulo registrado exitosamente'),
-                        backgroundColor: const Color(0xFF2EA198),
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
+                      // Crear transacción recurrente
+                      final nuevaRecurrente = TransaccionRecurrente.nueva(
+                        descripcion: descripcionController.text,
+                        monto: monto,
+                        tipo: 'ingreso',
+                        fechaInicio: fechaInicio!,
+                        frecuencia: frecuenciaSeleccionada!,
+                        condicionFin: condicionFinSeleccionada!,
+                        valorFin: valorFin,
+                        categoriaId: categoriaSeleccionada!,
+                      );
+
+                      // Cerrar diálogo primero
+                      Navigator.of(context).pop();
+
+                      // Registrar en estado
+                      setState(() {
+                        listaDeTransaccionesRecurrentes.add(nuevaRecurrente);
+
+                        // Si la fecha de inicio es hoy o anterior, registrar la primera instancia
+                        final hoy = DateTime.now();
+                        final inicio = DateTime(fechaInicio!.year, fechaInicio!.month, fechaInicio!.day);
+                        final hoySolo = DateTime(hoy.year, hoy.month, hoy.day);
+                        if (inicio.isBefore(hoySolo) || inicio.isAtSameMomentAs(hoySolo)) {
+                          final primera = Transaccion(
+                            id: const Uuid().v4(),
+                            tipo: 'ingreso',
+                            monto: monto,
+                            descripcion: descripcionController.text,
+                            fecha: inicio,
+                            categoriaId: categoriaSeleccionada!,
+                          );
+                          listaDeTransacciones.add(primera);
+                          saldoDisponible += monto;
+                        }
+                      });
+
+                      await _guardarDatos();
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('$titulo recurrente programado'),
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                    } else {
+                      // Crear nueva transacción simple
+                      final nuevaTransaccion = Transaccion.nueva(
+                        tipo: tipo,
+                        monto: monto,
+                        descripcion: descripcionController.text,
+                        categoriaId: categoriaSeleccionada!,
+                      );
+
+                      // Cerrar diálogo primero
+                      Navigator.of(context).pop();
+
+                      // Actualizar estado del widget principal
+                      setState(() {
+                        listaDeTransacciones.add(nuevaTransaccion);
+                        
+                        // Actualizar saldo según el tipo
+                        if (tipo == 'ingreso') {
+                          saldoDisponible += monto;
+                        } else {
+                          // Para gasto, ahorro e inversión se resta del saldo
+                          saldoDisponible -= monto;
+                        }
+                      });
+
+                      // Guardar datos
+                      await _guardarDatos();
+
+                      // Mostrar confirmación
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('$titulo registrado exitosamente'),
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2EA198),
-                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   ),
                   child: const Text('Guardar'),
                 ),
