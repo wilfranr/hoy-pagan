@@ -38,4 +38,20 @@ double parseMonto(String value) {
   return double.parse(digitsOnly);
 }
 
+String formatoMoneda(double monto) {
+  final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: r'$', decimalDigits: 0);
+  return currencyFormat.format(monto);
+}
 
+String getFrecuenciaText(String frecuencia) {
+  switch (frecuencia) {
+    case 'semanal':
+      return 'Cada semana';
+    case 'mensual':
+      return 'Cada mes';
+    case 'anual':
+      return 'Cada año';
+    default:
+      return 'Cada mes';
+  }
+}
