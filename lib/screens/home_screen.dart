@@ -1213,7 +1213,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.of(context).pop();
 
                       // Registrar en estado
-                      setStateDialog(() {
+                      setState(() {
                         listaDeTransaccionesRecurrentes.add(nuevaRecurrente);
 
                         // Si la fecha de inicio es hoy o anterior, registrar la primera instancia
@@ -1260,7 +1260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.of(context).pop();
 
                       // Actualizar estado del widget principal
-                      setStateDialog(() {
+                      setState(() {
                         listaDeTransacciones.add(nuevaTransaccion);
                         
                         // Actualizar saldo según el tipo
