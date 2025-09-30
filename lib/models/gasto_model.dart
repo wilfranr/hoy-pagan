@@ -1,50 +1,74 @@
+import 'package:uuid/uuid.dart';
 
-
-/// Modelo de datos para representar un gasto.
-///
-/// Incluye métodos para la serialización y deserialización JSON,
-/// lo que facilita su almacenamiento en `shared_preferences`.
 class Gasto {
+  String id;
   String nombre;
   double monto;
   int diaDePago;
   bool pagado;
-  String? descripcion;
-  String? categoria;
+  bool esRecurrente;
+  DateTime? fechaVencimiento;
+  String categoriaId; // ID de la categoría asociada
 
   Gasto({
+    required this.id,
     required this.nombre,
     required this.monto,
     required this.diaDePago,
     required this.pagado,
-    this.descripcion,
-    this.categoria,
+    this.esRecurrente = true,
+    this.fechaVencimiento,
+    required this.categoriaId,
   });
 
-  /// Convierte la instancia de Gasto a un mapa (JSON).
+  // Constructor factory para crear Gasto desde JSON
+  factory Gasto.fromJson(Map<String, dynamic> json) {
+    return Gasto(
+      id: json['id'] as String,
+      nombre: json['nombre'] as String,
+      monto: (json['monto'] as num).toDouble(),
+      diaDePago: json['diaDePago'] as int,
+      pagado: json['pagado'] as bool,
+      esRecurrente: json['esRecurrente'] as bool? ?? true,
+      fechaVencimiento: json['fechaVencimiento'] != null
+        ? DateTime.parse(json['fechaVencimiento'] as String)
+        : null,
+      categoriaId: json['categoriaId'] as String? ?? '', // Compatibilidad con datos existentes
+    );
+  }
+
+  // Método para convertir Gasto a JSON
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'nombre': nombre,
       'monto': monto,
       'diaDePago': diaDePago,
       'pagado': pagado,
-      'descripcion': descripcion,
-      'categoria': categoria,
+      'esRecurrente': esRecurrente,
+      'fechaVencimiento': fechaVencimiento?.toIso8601String(),
+      'categoriaId': categoriaId,
     };
   }
 
-  /// Crea una instancia de Gasto a partir de un mapa (JSON).
-  factory Gasto.fromJson(Map<String, dynamic> json) {
-    // Se asegura de que el monto se lea como double, incluso si viene como int.
-    final monto = json['monto'] is int ? (json['monto'] as int).toDouble() : json['monto'];
-    
+  // Constructor para crear un nuevo gasto con ID único
+  factory Gasto.nuevo({
+    required String nombre,
+    required double monto,
+    required int diaDePago,
+    bool esRecurrente = true,
+    DateTime? fechaVencimiento,
+    required String categoriaId,
+  }) {
     return Gasto(
-      nombre: json['nombre'],
+      id: const Uuid().v4(),
+      nombre: nombre,
       monto: monto,
-      diaDePago: json['diaDePago'],
-      pagado: json['pagado'],
-      descripcion: json['descripcion'],
-      categoria: json['categoria'],
+      diaDePago: diaDePago,
+      pagado: false,
+      esRecurrente: esRecurrente,
+      fechaVencimiento: fechaVencimiento,
+      categoriaId: categoriaId,
     );
   }
 }
