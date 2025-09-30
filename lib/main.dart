@@ -295,7 +295,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return MaterialApp(
-            title: 'HoyPagan',
+            title: 'KIPU',
             theme: AppThemes.lightTheme,
             darkTheme: AppThemes.darkTheme,
             themeMode: themeProvider.themeMode,
@@ -1077,7 +1077,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 title: const Text(
-                  'Añadir Ingreso Extra',
+                  'Añadir Ingreso',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
@@ -1104,7 +1104,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 title: const Text(
-                  'Registrar Gasto Variable',
+                  'Registrar Gasto',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
@@ -1242,10 +1242,10 @@ class _HomeScreenState extends State<HomeScreen> {
     String titulo = '';
     switch (tipo) {
       case 'ingreso':
-        titulo = 'Nuevo Ingreso Extra';
+        titulo = 'Nuevo Ingreso';
         break;
       case 'gasto':
-        titulo = 'Nuevo Gasto Variable';
+        titulo = 'Nuevo Gasto';
         break;
       case 'ahorro':
         titulo = 'Nuevo Ahorro';

@@ -1,4 +1,4 @@
-# Control de Gastos en Flutter (hoypagan)
+# Control de Gastos en Flutter (KIPU)
 
 ## Descripción General
 
