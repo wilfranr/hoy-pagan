@@ -1332,7 +1332,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (tipo == 'ingreso' || tipo == 'gasto') ...[
                       const SizedBox(height: 16),
                       SwitchListTile.adaptive(
-                        title: const Text('¿Es un ingreso recurrente?'),
+                        title: Text(tipo == 'ingreso' ? '¿Es un ingreso recurrente?' : '¿Es un gasto recurrente?'),
                         value: esRecurrente,
                         onChanged: (v) {
                           setState(() {
