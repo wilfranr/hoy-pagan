@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:uuid/uuid.dart';
-import 'package:provider/provider.dart';
 import '../utils/formatters.dart';
 import '../models/categoria_model.dart';
 import '../models/transaccion_model.dart';
@@ -32,55 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
   // Constante para el día de pago
   final int diaDePago = 1;
   
-
-  // Función para obtener el ícono según la categoría del gasto
-  IconData _getIconForGasto(String nombre) {
-    if (nombre.toLowerCase().contains('alquiler') || nombre.toLowerCase().contains('arriendo')) {
-      return Icons.home;
-    } else if (nombre.toLowerCase().contains('servicios') || nombre.toLowerCase().contains('facturas')) {
-      return Icons.receipt_long;
-    } else if (nombre.toLowerCase().contains('supermercado') || nombre.toLowerCase().contains('comida')) {
-      return Icons.shopping_cart;
-    } else if (nombre.toLowerCase().contains('transporte')) {
-      return Icons.directions_bus;
-    } else if (nombre.toLowerCase().contains('internet') || nombre.toLowerCase().contains('telefonía')) {
-      return Icons.wifi;
-    } else {
-      return Icons.payment;
-    }
-  }
-
-  // Función para obtener el ícono según el tipo de transacción
-  IconData _getIconForTransaccion(String tipo) {
-    switch (tipo) {
-      case 'ingreso':
-        return Icons.arrow_downward;
-      case 'gasto':
-        return Icons.arrow_upward;
-      case 'ahorro':
-        return Icons.savings;
-      case 'inversion':
-        return Icons.trending_up;
-      default:
-        return Icons.payment;
-    }
-  }
-
-  // Función para obtener el color según el tipo de transacción
-  Color _getColorForTransaccion(String tipo) {
-    switch (tipo) {
-      case 'ingreso':
-        return Colors.green;
-      case 'gasto':
-        return Colors.red;
-      case 'ahorro':
-        return Colors.blue;
-      case 'inversion':
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
-  }
 
   // Función para obtener el ícono de la categoría
   IconData _getIconForCategoria(String categoriaId) {
@@ -341,9 +291,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Función para verificar si es el día de pago y mostrar modal si es necesario
   void _verificarDiaDePago() {
-    final now = DateTime.now();
-    final mesActual = '${now.year}-${now.month}';
-    
     // La verificación de pago ahora se maneja a través de transacciones recurrentes
   }
 
@@ -583,6 +530,7 @@ class _HomeScreenState extends State<HomeScreen> {
     listaDeTransacciones.add(nuevaTransaccion);
     
     // 4. Guardar datos
+    final messenger = ScaffoldMessenger.of(context);
     await _guardarDatos();
     
     // 5. Marcar como procesado para no volver a mostrar hoy
@@ -592,15 +540,13 @@ class _HomeScreenState extends State<HomeScreen> {
     await prefs.setBool(clave, true);
     
     // 6. Mostrar confirmación
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Ingreso de ${NumberFormat.currency(locale: 'es_CO', symbol: r'$', decimalDigits: 0).format(transaccion.monto)} registrado'),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Ingreso de ${NumberFormat.currency(locale: 'es_CO', symbol: r'$', decimalDigits: 0).format(transaccion.monto)} registrado'),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 3),
+      ),
+    );
     
     // 7. Actualizar UI
     setState(() {});
@@ -624,6 +570,7 @@ class _HomeScreenState extends State<HomeScreen> {
     listaDeTransacciones.add(nuevaTransaccion);
     
     // 4. Guardar datos
+    final messenger = ScaffoldMessenger.of(context);
     await _guardarDatos();
     
     // 5. Marcar como procesado para no volver a mostrar hoy
@@ -633,15 +580,13 @@ class _HomeScreenState extends State<HomeScreen> {
     await prefs.setBool(clave, true);
     
     // 6. Mostrar confirmación
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gasto de ${NumberFormat.currency(locale: 'es_CO', symbol: r'$', decimalDigits: 0).format(transaccion.monto)} registrado'),
-          backgroundColor: const Color(0xFF2EA198),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Gasto de ${NumberFormat.currency(locale: 'es_CO', symbol: r'$', decimalDigits: 0).format(transaccion.monto)} registrado'),
+        backgroundColor: const Color(0xFF2EA198),
+        duration: const Duration(seconds: 3),
+      ),
+    );
     
     // 7. Actualizar UI
     setState(() {});
@@ -905,6 +850,7 @@ class _HomeScreenState extends State<HomeScreen> {
             });
             _guardarDatos();
             
+            if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Transferencia recurrente programada exitosamente'),
@@ -1294,6 +1240,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       await _guardarDatos();
 
+                      if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('$titulo recurrente programado'),
@@ -1328,6 +1275,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       await _guardarDatos();
 
                       // Mostrar confirmación
+                      if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('$titulo registrado exitosamente'),
@@ -1893,6 +1841,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
         ingresoMensual = nuevoIngreso;
       });
       widget.onDatosActualizados(ingresoMensual, listaDeGastos, listaDeTransaccionesRecurrentes);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Ingreso mensual actualizado'),
