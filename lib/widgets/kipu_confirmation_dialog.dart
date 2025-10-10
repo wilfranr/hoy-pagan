@@ -140,10 +140,10 @@ class _KipuPromptDialogState extends State<KipuPromptDialog>
   /// Construye la sección de la mascota Kipu
   Widget _buildMascotSection() {
     final screenWidth = MediaQuery.of(context).size.width;
-    final mascotSize = screenWidth > 600 ? 150.0 : 120.0;
+    final mascotSize = screenWidth > 600 ? 200.0 : 160.0; // Aumentar tamaño significativamente
     
     return Positioned(
-      top: -mascotSize * 0.3, // Posicionar parcialmente fuera de la tarjeta
+      top: -mascotSize * 0.4, // Posicionar más fuera de la tarjeta
       child: Container(
         height: mascotSize,
         width: mascotSize,
@@ -151,9 +151,9 @@ class _KipuPromptDialogState extends State<KipuPromptDialog>
           borderRadius: BorderRadius.circular(mascotSize / 2),
           boxShadow: [
             BoxShadow(
-              color: KipuColors.tealKipu.withOpacity(0.3),
-              blurRadius: 20,
-              spreadRadius: 2,
+              color: KipuColors.tealKipu.withOpacity(0.4),
+              blurRadius: 30,
+              spreadRadius: 5,
             ),
           ],
         ),
@@ -189,7 +189,7 @@ class _KipuPromptDialogState extends State<KipuPromptDialog>
     
     return Container(
       margin: EdgeInsets.only(
-        top: screenWidth > 600 ? 80 : 60, // Espacio para la mascota
+        top: screenWidth > 600 ? 120 : 100, // Aumentar espacio para la mascota más grande
       ),
       decoration: BoxDecoration(
         color: KipuColors.tarjetaOscura,
