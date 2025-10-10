@@ -402,7 +402,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return KipuPromptDialog(
-          mascotImagePath: 'assets/images/modal_ya_pagaron_base.png',
+          mascotImagePath: 'assets/images/logo_kipu.png',
           descripcion: transaccion.descripcion,
           monto: formatoMoneda(transaccion.monto),
           frecuencia: transaccion.frecuencia,
@@ -420,7 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return KipuPromptDialog(
-          mascotImagePath: 'assets/images/modal_ya_pagaste_base.png',
+          mascotImagePath: 'assets/images/logo_kipu.png',
           descripcion: transaccion.descripcion,
           monto: formatoMoneda(transaccion.monto),
           frecuencia: transaccion.frecuencia,
@@ -538,7 +538,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return KipuPromptDialog(
-          mascotImagePath: 'assets/images/modal_ya_pagaste_base.png',
+          mascotImagePath: 'assets/images/logo_kipu.png',
           descripcion: gasto.nombre,
           monto: formatoMoneda(gasto.monto),
           frecuencia: 'Día de pago: ${gasto.diaDePago}',
