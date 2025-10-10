@@ -140,7 +140,7 @@ class _KipuPromptDialogState extends State<KipuPromptDialog>
   /// Construye la sección de la mascota Kipu
   Widget _buildMascotSection() {
     final screenWidth = MediaQuery.of(context).size.width;
-    final mascotSize = screenWidth > 600 ? 250.0 : 200.0; // Aumentar tamaño de la mascota
+    final mascotSize = screenWidth > 600 ? 280.0 : 230.0; // Aumentar aún más el tamaño
     
     return Positioned(
       top: -mascotSize * 0.4,
@@ -176,7 +176,7 @@ class _KipuPromptDialogState extends State<KipuPromptDialog>
     
     return Container(
       margin: EdgeInsets.only(
-        top: screenWidth > 600 ? 140 : 120, // Ajustar para mascota más grande
+        top: screenWidth > 600 ? 160 : 140, // Ajustar para mascota aún más grande
       ),
       decoration: BoxDecoration(
         color: KipuColors.tarjetaOscura,
@@ -214,7 +214,7 @@ class _KipuPromptDialogState extends State<KipuPromptDialog>
   /// Construye los detalles de la transacción
   Widget _buildTransactionDetails() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: KipuColors.fondoModal.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
@@ -223,54 +223,76 @@ class _KipuPromptDialogState extends State<KipuPromptDialog>
           width: 0.5,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            widget.descripcion,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: KipuColors.textoPrincipalModal,
-              fontWeight: FontWeight.w500,
+          // Descripción
+          Expanded(
+            flex: 2,
+            child: Text(
+              widget.descripcion,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: KipuColors.textoPrincipalModal,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           
-          const SizedBox(height: 8),
+          const SizedBox(width: 8),
           
-          Row(
-            children: [
-              Icon(
-                Icons.attach_money,
-                size: 16,
-                color: KipuColors.tealKipu,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                widget.monto,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: KipuColors.tealKipu,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          
-          if (widget.frecuencia != null) ...[
-            const SizedBox(height: 8),
-            Row(
+          // Monto
+          Expanded(
+            flex: 1,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.schedule,
-                  size: 16,
-                  color: KipuColors.textoSecundarioModal,
+                  Icons.attach_money,
+                  size: 14,
+                  color: KipuColors.tealKipu,
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  widget.frecuencia!,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: KipuColors.textoSecundarioModal,
+                const SizedBox(width: 2),
+                Flexible(
+                  child: Text(
+                    widget.monto,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: KipuColors.tealKipu,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
+            ),
+          ),
+          
+          if (widget.frecuencia != null) ...[
+            const SizedBox(width: 8),
+            
+            // Frecuencia
+            Expanded(
+              flex: 1,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.schedule,
+                    size: 14,
+                    color: KipuColors.textoSecundarioModal,
+                  ),
+                  const SizedBox(width: 2),
+                  Flexible(
+                    child: Text(
+                      widget.frecuencia!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: KipuColors.textoSecundarioModal,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ],
