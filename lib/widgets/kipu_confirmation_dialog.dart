@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:kipu/widgets/kipu_colors.dart';
 
-/// Widget personalizado para mostrar diálogos de confirmación con la mascota Kipu animada
-class KipuConfirmationDialog extends StatefulWidget {
-  /// Título de la pregunta (ej. "¿Ya pagaste este gasto?")
-  final String titulo;
+/// Widget personalizado para mostrar diálogos de confirmación con la mascota Kipu
+class KipuPromptDialog extends StatefulWidget {
+  /// Ruta de la imagen de la mascota (debe incluir la burbuja de diálogo)
+  final String mascotImagePath;
   
   /// Descripción de la transacción
   final String descripcion;
@@ -27,9 +27,9 @@ class KipuConfirmationDialog extends StatefulWidget {
   /// Función callback para cuando se presiona "No"
   final VoidCallback onCancelar;
 
-  const KipuConfirmationDialog({
+  const KipuPromptDialog({
     super.key,
-    required this.titulo,
+    required this.mascotImagePath,
     required this.descripcion,
     required this.monto,
     this.frecuencia,
@@ -40,50 +40,59 @@ class KipuConfirmationDialog extends StatefulWidget {
   });
 
   @override
-  State<KipuConfirmationDialog> createState() => _KipuConfirmationDialogState();
+  State<KipuPromptDialog> createState() => _KipuPromptDialogState();
 }
 
-class _KipuConfirmationDialogState extends State<KipuConfirmationDialog>
+class _KipuPromptDialogState extends State<KipuPromptDialog>
     with TickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _bounceAnimation;
-  late Animation<double> _wiggleAnimation;
+  late AnimationController _slideController;
+  late AnimationController _fadeController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
     
-    // Controlador para la animación de rebote vertical
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+    // Controlador para la animación de deslizamiento
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
     
-    // Animación de rebote suave
-    _bounceAnimation = Tween<double>(
-      begin: 0.0,
-      end: 8.0,
+    // Controlador para la animación de desvanecimiento
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    
+    // Animación de deslizamiento desde abajo
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
     ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
+      parent: _slideController,
+      curve: Curves.easeOutBack,
     ));
     
-    // Animación de movimiento lateral sutil
-    _wiggleAnimation = Tween<double>(
+    // Animación de desvanecimiento
+    _fadeAnimation = Tween<double>(
       begin: 0.0,
-      end: 3.0,
+      end: 1.0,
     ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
+      parent: _fadeController,
+      curve: Curves.easeOut,
     ));
     
-    // Iniciar la animación en bucle
-    _animationController.repeat(reverse: true);
+    // Iniciar las animaciones
+    _slideController.forward();
+    _fadeController.forward();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _slideController.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
 
@@ -97,105 +106,121 @@ class _KipuConfirmationDialogState extends State<KipuConfirmationDialog>
     
     return Dialog(
       backgroundColor: Colors.transparent,
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: maxWidth,
-          maxHeight: screenHeight * 0.8,
-        ),
-        decoration: BoxDecoration(
-          color: KipuColors.tarjetaOscura,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: KipuColors.bordeModal,
-            width: 1,
-          ),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(screenWidth > 600 ? 24 : 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Mascota Kipu animada
-              _buildKipuAnimation(),
-              
-              SizedBox(height: screenWidth > 600 ? 20 : 16),
-              
-              // Título de la pregunta
-              Text(
-                widget.titulo,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: KipuColors.textoPrincipalModal,
-                  fontWeight: FontWeight.w600,
+      child: AnimatedBuilder(
+        animation: _slideAnimation,
+        builder: (context, child) {
+          return SlideTransition(
+            position: _slideAnimation,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: maxWidth,
+                  maxHeight: screenHeight * 0.8,
                 ),
-                textAlign: TextAlign.center,
+                child: Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  children: [
+                    // Tarjeta de información (parte inferior)
+                    _buildInfoCard(),
+                    
+                    // Mascota Kipu (parte superior)
+                    _buildMascotSection(),
+                  ],
+                ),
               ),
-              
-              SizedBox(height: screenWidth > 600 ? 16 : 12),
-              
-              // Detalles de la transacción
-              _buildTransactionDetails(),
-              
-              SizedBox(height: screenWidth > 600 ? 24 : 20),
-              
-              // Botones de acción
-              _buildActionButtons(),
-            ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Construye la sección de la mascota Kipu
+  Widget _buildMascotSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final mascotSize = screenWidth > 600 ? 150.0 : 120.0;
+    
+    return Positioned(
+      top: -mascotSize * 0.3, // Posicionar parcialmente fuera de la tarjeta
+      child: Container(
+        height: mascotSize,
+        width: mascotSize,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(mascotSize / 2),
+          boxShadow: [
+            BoxShadow(
+              color: KipuColors.tealKipu.withOpacity(0.3),
+              blurRadius: 20,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(mascotSize / 2),
+          child: Image.asset(
+            widget.mascotImagePath,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              // Fallback si la imagen no se encuentra
+              return Container(
+                decoration: BoxDecoration(
+                  color: KipuColors.tealKipu.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(mascotSize / 2),
+                ),
+                child: Icon(
+                  Icons.pets,
+                  size: mascotSize * 0.5,
+                  color: KipuColors.tealKipu,
+                ),
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  /// Construye la animación de la mascota Kipu
-  Widget _buildKipuAnimation() {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        final kipuSize = screenWidth > 600 ? 100.0 : 80.0;
-        
-        return Transform.translate(
-          offset: Offset(
-            _wiggleAnimation.value * (0.5 - (_animationController.value % 1)),
-            -_bounceAnimation.value,
+  /// Construye la tarjeta de información
+  Widget _buildInfoCard() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
+    return Container(
+      margin: EdgeInsets.only(
+        top: screenWidth > 600 ? 80 : 60, // Espacio para la mascota
+      ),
+      decoration: BoxDecoration(
+        color: KipuColors.tarjetaOscura,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: KipuColors.bordeModal,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 20,
+            spreadRadius: 2,
           ),
-          child: Container(
-            height: kipuSize,
-            width: kipuSize,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(kipuSize / 2),
-              boxShadow: [
-                BoxShadow(
-                  color: KipuColors.tealKipu.withOpacity(0.3),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(kipuSize / 2),
-              child: Image.asset(
-                'assets/images/logo_kipu.png',
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  // Fallback si la imagen no se encuentra
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: KipuColors.tealKipu.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(kipuSize / 2),
-                    ),
-                    child: Icon(
-                      Icons.pets,
-                      size: kipuSize * 0.5,
-                      color: KipuColors.tealKipu,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        );
-      },
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(screenWidth > 600 ? 24 : 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Detalles de la transacción
+            _buildTransactionDetails(),
+            
+            SizedBox(height: screenWidth > 600 ? 24 : 20),
+            
+            // Botones de acción
+            _buildActionButtons(),
+          ],
+        ),
+      ),
     );
   }
 

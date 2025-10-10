@@ -67,6 +67,8 @@ flutter:
   assets:
     - assets/images/logo_kipu.png
     - assets/images/splash_kipu.png
+    - assets/images/modal_ya_pagaste.png
+    - assets/images/modal_ya_pagaron.png
     - assets/images/
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -401,8 +401,8 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return KipuConfirmationDialog(
-          titulo: '¿Ya recibiste este ingreso?',
+        return KipuPromptDialog(
+          mascotImagePath: 'assets/images/modal_ya_pagaron.png',
           descripcion: transaccion.descripcion,
           monto: formatoMoneda(transaccion.monto),
           frecuencia: transaccion.frecuencia,
@@ -419,8 +419,8 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return KipuConfirmationDialog(
-          titulo: '¿Ya pagaste este gasto?',
+        return KipuPromptDialog(
+          mascotImagePath: 'assets/images/modal_ya_pagaste.png',
           descripcion: transaccion.descripcion,
           monto: formatoMoneda(transaccion.monto),
           frecuencia: transaccion.frecuencia,
@@ -537,8 +537,8 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return KipuConfirmationDialog(
-          titulo: '¿Ya pagaste este gasto?',
+        return KipuPromptDialog(
+          mascotImagePath: 'assets/images/modal_ya_pagaste.png',
           descripcion: gasto.nombre,
           monto: formatoMoneda(gasto.monto),
           frecuencia: 'Día de pago: ${gasto.diaDePago}',
