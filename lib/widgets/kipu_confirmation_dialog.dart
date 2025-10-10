@@ -140,43 +140,30 @@ class _KipuPromptDialogState extends State<KipuPromptDialog>
   /// Construye la sección de la mascota Kipu
   Widget _buildMascotSection() {
     final screenWidth = MediaQuery.of(context).size.width;
-    final mascotSize = screenWidth > 600 ? 200.0 : 160.0; // Aumentar tamaño significativamente
+    final mascotSize = screenWidth > 600 ? 200.0 : 160.0;
     
     return Positioned(
-      top: -mascotSize * 0.4, // Posicionar más fuera de la tarjeta
-      child: Container(
+      top: -mascotSize * 0.4,
+      child: SizedBox(
         height: mascotSize,
         width: mascotSize,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(mascotSize / 2),
-          boxShadow: [
-            BoxShadow(
-              color: KipuColors.tealKipu.withOpacity(0.4),
-              blurRadius: 30,
-              spreadRadius: 5,
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(mascotSize / 2),
-          child: Image.asset(
-            widget.mascotImagePath,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              // Fallback si la imagen no se encuentra
-              return Container(
-                decoration: BoxDecoration(
-                  color: KipuColors.tealKipu.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(mascotSize / 2),
-                ),
-                child: Icon(
-                  Icons.pets,
-                  size: mascotSize * 0.5,
-                  color: KipuColors.tealKipu,
-                ),
-              );
-            },
-          ),
+        child: Image.asset(
+          widget.mascotImagePath,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback si la imagen no se encuentra
+            return Container(
+              decoration: BoxDecoration(
+                color: KipuColors.tealKipu.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(mascotSize / 2),
+              ),
+              child: Icon(
+                Icons.pets,
+                size: mascotSize * 0.5,
+                color: KipuColors.tealKipu,
+              ),
+            );
+          },
         ),
       ),
     );
