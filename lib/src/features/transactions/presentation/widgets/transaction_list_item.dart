@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/transaccion_model.dart';
-import '../models/categoria_model.dart';
+import 'package:kipu/src/features/transactions/data/models/transaccion_model.dart';
+import 'package:kipu/src/features/transactions/data/models/categoria_model.dart';
 
 class TransactionListItem extends StatelessWidget {
   final Transaccion transaction;
@@ -36,6 +36,15 @@ class TransactionListItem extends StatelessWidget {
     return categoria.tipo == 'ingreso' ? Colors.green : Colors.red;
   }
 
+  String _obtenerNombreCategoria(String categoriaId) {
+    if (categoriaId.isEmpty) return 'Sin categoría';
+    try {
+      return categorias.firstWhere((cat) => cat.id == categoriaId).nombre;
+    } catch (e) {
+      return 'Sin categoría';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     String titulo = '';
@@ -44,7 +53,7 @@ class TransactionListItem extends StatelessWidget {
         titulo = 'Ingreso Extra';
         break;
       case 'gasto':
-        titulo = 'Gasto Variable';
+        titulo = 'Gasto';
         break;
       case 'ahorro':
         titulo = 'Ahorro';
@@ -54,8 +63,11 @@ class TransactionListItem extends StatelessWidget {
         break;
     }
 
-    final hora = DateFormat('HH:mm').format(transaction.fecha);
-    final subtitulo = '$hora · ${transaction.descripcion}';
+    final hora = DateFormat('h:mm a', 'es').format(transaction.fecha);
+    final nombreCategoria = _obtenerNombreCategoria(transaction.categoriaId);
+    final subtitulo = transaction.descripcion == 'Sin descripción' 
+        ? hora
+        : '${transaction.descripcion} - $hora';
     final monto = transaction.tipo == 'ingreso' ? '+${formatoMoneda(transaction.monto)}' : formatoMoneda(transaction.monto);
     final montoColor = transaction.tipo == 'ingreso' ? Colors.green : Colors.red;
     final icon = _getIconForCategoria(transaction.categoriaId);

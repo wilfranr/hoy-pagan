@@ -6,16 +6,16 @@ class AppThemes {
   static const Color primaryColorDark = Color(0xFF00A67A);
   
   // Colores para el tema claro
-  static const Color lightScaffoldBackground = Color(0xFFFAFAFA);
+  static const Color lightScaffoldBackground = Color(0xFFF5F7F8);
   static const Color lightCardBackground = Colors.white;
-  static const Color lightTextPrimary = Color(0xFF2D2D2D);
-  static const Color lightTextSecondary = Color(0xFF757575);
+  static const Color lightTextPrimary = Color(0xFF1F2937);
+  static const Color lightTextSecondary = Color(0xFF6B7280);
   
   // Colores para el tema oscuro
-  static const Color darkScaffoldBackground = Color(0xFF121212);
-  static const Color darkCardBackground = Color(0xFF1E1E1E);
-  static const Color darkTextPrimary = Color(0xFFE1E1E1);
-  static const Color darkTextSecondary = Color(0xFF9E9E9E);
+  static const Color darkScaffoldBackground = Color(0xFF101922);
+  static const Color darkCardBackground = Color(0xFF1F2937);
+  static const Color darkTextPrimary = Color(0xFFF9FAFB);
+  static const Color darkTextSecondary = Color(0xFF9CA3AF);
   
   // Color de acento para saldos positivos
   static const Color positiveAmountColor = Color(0xFF00C896);
