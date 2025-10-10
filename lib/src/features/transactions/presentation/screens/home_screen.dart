@@ -15,6 +15,7 @@ import 'package:kipu/src/features/transactions/presentation/screens/edit_transac
 import 'package:kipu/src/features/theme_selector/presentation/screens/theme_selector_screen.dart';
 import 'package:kipu/src/features/user_profile/presentation/screens/registro_usuario_screen.dart';
 import 'package:kipu/src/features/expense_dashboard/presentation/screens/expense_dashboard_screen.dart';
+import 'package:kipu/widgets/kipu_confirmation_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -400,35 +401,15 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('¿Ya recibiste este ingreso?'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('${transaccion.descripcion}'),
-              const SizedBox(height: 8),
-              Text('Monto: ${formatoMoneda(transaccion.monto)}'),
-              const SizedBox(height: 8),
-              Text('Frecuencia: ${transaccion.frecuencia}'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _procesarIngresoRecurrente(transaccion, false);
-              },
-              child: const Text('No'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _procesarIngresoRecurrente(transaccion, true);
-              },
-              child: const Text('Sí'),
-            ),
-          ],
+        return KipuConfirmationDialog(
+          titulo: '¿Ya recibiste este ingreso?',
+          descripcion: transaccion.descripcion,
+          monto: formatoMoneda(transaccion.monto),
+          frecuencia: transaccion.frecuencia,
+          textoBotonSi: 'Sí',
+          textoBotonNo: 'No',
+          onConfirmar: () => _procesarIngresoRecurrente(transaccion, true),
+          onCancelar: () => _procesarIngresoRecurrente(transaccion, false),
         );
       },
     );
@@ -438,35 +419,15 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('¿Ya pagaste este gasto?'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('${transaccion.descripcion}'),
-              const SizedBox(height: 8),
-              Text('Monto: ${formatoMoneda(transaccion.monto)}'),
-              const SizedBox(height: 8),
-              Text('Frecuencia: ${transaccion.frecuencia}'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _procesarGastoRecurrente(transaccion, false);
-              },
-              child: const Text('No'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _procesarGastoRecurrente(transaccion, true);
-              },
-              child: const Text('Sí'),
-            ),
-          ],
+        return KipuConfirmationDialog(
+          titulo: '¿Ya pagaste este gasto?',
+          descripcion: transaccion.descripcion,
+          monto: formatoMoneda(transaccion.monto),
+          frecuencia: transaccion.frecuencia,
+          textoBotonSi: 'Sí',
+          textoBotonNo: 'No',
+          onConfirmar: () => _procesarGastoRecurrente(transaccion, true),
+          onCancelar: () => _procesarGastoRecurrente(transaccion, false),
         );
       },
     );
@@ -576,32 +537,15 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('¿Ya pagaste este gasto?'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('${gasto.nombre}'),
-              const SizedBox(height: 8),
-              Text('Monto: ${formatoMoneda(gasto.monto)}'),
-              const SizedBox(height: 8),
-              Text('Día de pago: ${gasto.diaDePago}'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _marcarGastoComoPagado(gasto);
-              },
-              child: const Text('Sí, ya pagué'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('No'),
-            ),
-          ],
+        return KipuConfirmationDialog(
+          titulo: '¿Ya pagaste este gasto?',
+          descripcion: gasto.nombre,
+          monto: formatoMoneda(gasto.monto),
+          frecuencia: 'Día de pago: ${gasto.diaDePago}',
+          textoBotonSi: 'Sí, ya pagué',
+          textoBotonNo: 'No',
+          onConfirmar: () => _marcarGastoComoPagado(gasto),
+          onCancelar: () {},
         );
       },
     );
