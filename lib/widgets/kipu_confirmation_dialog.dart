@@ -101,8 +101,8 @@ class _KipuPromptDialogState extends State<KipuPromptDialog>
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     
-    // Ajustar el ancho máximo según el tamaño de pantalla
-    final maxWidth = screenWidth > 600 ? 400.0 : screenWidth * 0.9;
+    // Hacer la tarjeta más pequeña
+    final maxWidth = screenWidth > 600 ? 320.0 : screenWidth * 0.75;
     
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -116,7 +116,7 @@ class _KipuPromptDialogState extends State<KipuPromptDialog>
               child: Container(
                 constraints: BoxConstraints(
                   maxWidth: maxWidth,
-                  maxHeight: screenHeight * 0.8,
+                  maxHeight: screenHeight * 0.7,
                 ),
                 child: Stack(
                   alignment: Alignment.center,
@@ -140,7 +140,7 @@ class _KipuPromptDialogState extends State<KipuPromptDialog>
   /// Construye la sección de la mascota Kipu
   Widget _buildMascotSection() {
     final screenWidth = MediaQuery.of(context).size.width;
-    final mascotSize = screenWidth > 600 ? 200.0 : 160.0;
+    final mascotSize = screenWidth > 600 ? 250.0 : 200.0; // Aumentar tamaño de la mascota
     
     return Positioned(
       top: -mascotSize * 0.4,
@@ -176,7 +176,7 @@ class _KipuPromptDialogState extends State<KipuPromptDialog>
     
     return Container(
       margin: EdgeInsets.only(
-        top: screenWidth > 600 ? 120 : 100, // Aumentar espacio para la mascota más grande
+        top: screenWidth > 600 ? 140 : 120, // Ajustar para mascota más grande
       ),
       decoration: BoxDecoration(
         color: KipuColors.tarjetaOscura,
@@ -194,14 +194,14 @@ class _KipuPromptDialogState extends State<KipuPromptDialog>
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(screenWidth > 600 ? 24 : 20),
+        padding: EdgeInsets.all(screenWidth > 600 ? 20 : 16), // Reducir padding interno
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Detalles de la transacción
             _buildTransactionDetails(),
             
-            SizedBox(height: screenWidth > 600 ? 24 : 20),
+            SizedBox(height: screenWidth > 600 ? 20 : 16), // Reducir espaciado
             
             // Botones de acción
             _buildActionButtons(),
