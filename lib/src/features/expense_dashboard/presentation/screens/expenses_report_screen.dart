@@ -242,7 +242,7 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
                     
                     // Categorías
                     _buildCategoriesSection(sortedCategorias, isDark),
-                    const SizedBox(height: 100), // Espacio para la navegación inferior
+                    const SizedBox(height: 20), // Espacio inferior reducido
                   ],
                 ),
               ),
@@ -250,7 +250,6 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigation(isDark),
     );
   }
 
@@ -459,57 +458,4 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
     );
   }
 
-  Widget _buildBottomNavigation(bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1F2937).withOpacity(0.8) : Colors.white.withOpacity(0.8),
-        border: Border(
-          top: BorderSide(
-            color: isDark ? const Color(0xFF374151) : const Color(0xFFE5E7EB),
-          ),
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(Icons.home, 'Resumen', false, isDark),
-              _buildNavItem(Icons.add_box, 'Registrar', false, isDark),
-              _buildNavItem(Icons.list_alt, 'Categorías', false, isDark),
-              _buildNavItem(Icons.bar_chart, 'Informes', true, isDark),
-              _buildNavItem(Icons.settings, 'Ajustes', false, isDark),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isActive, bool isDark) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          color: isActive 
-              ? KipuColors.tealKipu 
-              : (isDark ? Colors.grey[400] : Colors.grey[600]),
-          size: 24,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: isActive 
-                ? KipuColors.tealKipu 
-                : (isDark ? Colors.grey[400] : Colors.grey[600]),
-          ),
-        ),
-      ],
-    );
-  }
 }
