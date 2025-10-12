@@ -4,6 +4,7 @@ import '../../data/models/categoria_model.dart';
 import '../../data/models/transaccion_model.dart';
 import '../../data/models/transaccion_recurrente_model.dart';
 import '../../../../shared/utils/formatters.dart';
+import '../../../../../widgets/custom_switch.dart';
 
 class NewTransactionModal extends StatefulWidget {
   final String tipo;
@@ -431,6 +432,7 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
                 initialDate: _fechaSeleccionada,
                 firstDate: DateTime(2020),
                 lastDate: DateTime(2030),
+                locale: const Locale('es', 'ES'),
               );
               if (fecha != null) {
                 setState(() {
@@ -527,7 +529,7 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
               ],
             ),
           ),
-          Switch(
+          CustomSwitch(
             value: _esRecurrente,
             onChanged: (value) {
               setState(() {
@@ -715,6 +717,7 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
                 initialDate: _fechaFin ?? DateTime.now().add(const Duration(days: 30)),
                 firstDate: DateTime.now(),
                 lastDate: DateTime(2030),
+                locale: const Locale('es', 'ES'),
               );
               if (fecha != null) {
                 setState(() {

@@ -38,7 +38,22 @@
       margin: 0;
       min-height: 100%;
       background-color: #FFFFFF;
-          background-size: 100% 100%;
+      background-size: 100% 100%;
+      /* iPhone 12 Pro simulation */
+      max-width: 390px;
+      margin: 0 auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    /* iPhone 12 Pro specific styles */
+    @media screen and (max-width: 390px) {
+      body {
+        max-width: 100%;
+        border-radius: 0;
+        box-shadow: none;
+      }
     }
 
     .center {
@@ -94,7 +109,7 @@
       document.body.style.background = "transparent";
     }
   </script>
-  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+  <meta content="width=390, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
 </head>
 <body>
   <picture id="splash">

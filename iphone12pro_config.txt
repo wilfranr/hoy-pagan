@@ -1,0 +1,18 @@
+# Configuración para iPhone 12 Pro
+# Resolución: 390x844 CSS pixels (1170x2532 píxeles físicos)
+# Densidad: 460 ppi
+# Ratio: 19.5:9
+
+# Comando para ejecutar con iPhone 12 Pro:
+# flutter run -d chrome --web-port=8080 --web-hostname=localhost
+
+# Configuraciones específicas del iPhone 12 Pro:
+DEVICE_WIDTH=390
+DEVICE_HEIGHT=844
+DEVICE_PIXEL_RATIO=3.0
+DEVICE_NAME="iPhone 12 Pro"
+
+# Para usar en el código Dart:
+# const double iPhone12ProWidth = 390.0;
+# const double iPhone12ProHeight = 844.0;
+# const double iPhone12ProPixelRatio = 3.0;
