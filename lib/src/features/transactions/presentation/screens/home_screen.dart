@@ -1,22 +1,162 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'dart:ui' as ui;
 import 'package:uuid/uuid.dart';
 import 'package:kipu/src/shared/utils/formatters.dart';
 import 'package:kipu/src/features/transactions/data/models/categoria_model.dart';
 import 'package:kipu/src/features/transactions/data/models/transaccion_model.dart';
 import 'package:kipu/src/features/transactions/data/models/transaccion_recurrente_model.dart';
 import 'package:kipu/src/features/transactions/data/models/gasto_model.dart';
-import 'package:kipu/src/features/transactions/presentation/widgets/transaction_list_item.dart';
 import 'package:kipu/src/features/transactions/presentation/widgets/new_transaction_modal.dart';
 import 'package:kipu/src/features/transactions/presentation/screens/edit_transaction_screen.dart';
 import 'package:kipu/src/features/theme_selector/presentation/screens/theme_selector_screen.dart';
 import 'package:kipu/src/features/user_profile/presentation/screens/registro_usuario_screen.dart';
 import 'package:kipu/src/features/expense_dashboard/presentation/screens/expense_dashboard_screen.dart';
 import 'package:kipu/widgets/kipu_confirmation_dialog.dart';
+
+// Widget personalizado para botón 3D con efecto de profundidad
+class Button3D extends StatefulWidget {
+  final VoidCallback onPressed;
+  final IconData icon;
+  final Color primaryColor;
+  final Color secondaryColor;
+  final double size;
+
+  const Button3D({
+    super.key,
+    required this.onPressed,
+    required this.icon,
+    this.primaryColor = Colors.blue,
+    this.secondaryColor = Colors.blue,
+    this.size = 56.0,
+  });
+
+  @override
+  State<Button3D> createState() => _Button3DState();
+}
+
+class _Button3DState extends State<Button3D> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _pressAnimation;
+  late Animation<double> _borderRadiusAnimation;
+  late Animation<double> _translateAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
+    );
+
+    _pressAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+
+    _borderRadiusAnimation = Tween<double>(
+      begin: 28.0,
+      end: 20.0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+
+    _translateAnimation = Tween<double>(
+      begin: 0.0,
+      end: 2.0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails details) {
+    _controller.forward();
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    _controller.reverse();
+    widget.onPressed();
+  }
+
+  void _onTapCancel() {
+    _controller.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return GestureDetector(
+          onTapDown: _onTapDown,
+          onTapUp: _onTapUp,
+          onTapCancel: _onTapCancel,
+          child: SizedBox(
+            width: widget.size,
+            height: widget.size,
+            child: Stack(
+              children: [
+                // Sombra base
+                Positioned(
+                  top: 3,
+                  left: 0,
+                  child: Container(
+                    width: widget.size,
+                    height: widget.size - 3,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(_borderRadiusAnimation.value),
+                      color: Colors.black.withOpacity(0.3),
+                    ),
+                  ),
+                ),
+                // Botón principal
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  child: Transform.translate(
+                    offset: Offset(0, _translateAnimation.value),
+                    child: Container(
+                      width: widget.size,
+                      height: widget.size,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(_borderRadiusAnimation.value),
+                        color: widget.primaryColor,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        widget.icon,
+                        color: Colors.white,
+                        size: widget.size * 0.4,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -42,6 +182,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _gastoAnimationController;
   late AnimationController _ahorroAnimationController;
   late AnimationController _inversionAnimationController;
+  late AnimationController _fabAnimationController;
 
   @override
   void initState() {
@@ -64,6 +205,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
+    _fabAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
     
     _cargarDatos().then((_) {
       _verificarPagosDeGastos();
@@ -77,6 +222,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _gastoAnimationController.dispose();
     _ahorroAnimationController.dispose();
     _inversionAnimationController.dispose();
+    _fabAnimationController.dispose();
     super.dispose();
   }
 
@@ -941,10 +1087,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: Button3D(
         onPressed: _mostrarMenuDeTransacciones,
-        backgroundColor: Theme.of(context).primaryColor,
-        child: const Icon(Icons.add, color: Colors.white),
+        icon: Icons.add,
+        primaryColor: Theme.of(context).primaryColor,
+        secondaryColor: Theme.of(context).primaryColor.withOpacity(0.8),
+        size: 56.0,
       ),
     );
   }
