@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:uuid/uuid.dart';
 import 'package:kipu/src/shared/utils/formatters.dart';
 import 'package:kipu/src/features/transactions/data/models/categoria_model.dart';
@@ -24,7 +25,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _selectedIndex = 2; // 2 = Inicio
 
   // Variables del estado
@@ -36,13 +37,47 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Categoria> listaDeCategorias = [];
   final int diaDePago = 1;
 
+  // Controladores de animación para los botones
+  late AnimationController _ingresoAnimationController;
+  late AnimationController _gastoAnimationController;
+  late AnimationController _ahorroAnimationController;
+  late AnimationController _inversionAnimationController;
+
   @override
   void initState() {
     super.initState();
+    
+    // Inicializar controladores de animación con duración más larga
+    _ingresoAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _gastoAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _ahorroAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _inversionAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    
     _cargarDatos().then((_) {
       _verificarPagosDeGastos();
       _revisarTransaccionesRecurrentes();
     });
+  }
+
+  @override
+  void dispose() {
+    _ingresoAnimationController.dispose();
+    _gastoAnimationController.dispose();
+    _ahorroAnimationController.dispose();
+    _inversionAnimationController.dispose();
+    super.dispose();
   }
 
   void _onItemTapped(int index) {
@@ -617,6 +652,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: 'Ingreso',
                         subtitle: 'Dinero que recibes',
                         color: Colors.green,
+                        animationController: _ingresoAnimationController,
                         onTap: () {
                           Navigator.pop(context);
                           _mostrarFormularioDeTransaccion('ingreso');
@@ -630,6 +666,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: 'Gasto',
                         subtitle: 'Dinero que gastas',
                         color: Colors.red,
+                        animationController: _gastoAnimationController,
                         onTap: () {
                           Navigator.pop(context);
                           _mostrarFormularioDeTransaccion('gasto');
@@ -647,6 +684,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: 'Ahorro',
                         subtitle: 'Dinero que guardas',
                         color: Colors.blue,
+                        animationController: _ahorroAnimationController,
                         onTap: () {
                           Navigator.pop(context);
                           _mostrarFormularioDeTransaccion('ahorro');
@@ -660,6 +698,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: 'Inversión',
                         subtitle: 'Dinero que inviertes',
                         color: Colors.purple,
+                        animationController: _inversionAnimationController,
                         onTap: () {
                           Navigator.pop(context);
                           _mostrarFormularioDeTransaccion('inversion');
@@ -702,46 +741,99 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
   Widget _buildTransactionOption({
     required IconData icon,
     required String title,
     required String subtitle,
     required Color color,
     required VoidCallback onTap,
+    required AnimationController animationController,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: color,
-                fontSize: 14,
+    return AnimatedBuilder(
+      animation: animationController,
+      builder: (context, child) {
+        // Calcular el tamaño del patrón basado en la animación (más dramático)
+        final patternSize = 15.0 + (10.0 * animationController.value);
+        
+        return GestureDetector(
+          onTapDown: (_) {
+            animationController.forward();
+          },
+          onTapUp: (_) async {
+            // Mantener la animación por más tiempo para apreciarla mejor
+            await Future.delayed(const Duration(milliseconds: 300));
+            animationController.reverse();
+            await Future.delayed(const Duration(milliseconds: 200));
+            onTap();
+          },
+          onTapCancel: () {
+            animationController.reverse();
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: color.withOpacity(0.8 + (0.2 * animationController.value)),
+                width: 1 + (2 * animationController.value),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
+              // Gradiente radial que cambia con la animación
+              gradient: RadialGradient(
+                center: Alignment.center,
+                radius: 1.0,
+                colors: [
+                  color.withOpacity(0.36 + (0.3 * animationController.value)),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.95],
               ),
-              textAlign: TextAlign.center,
+              // Efecto de patrón usando boxShadow que cambia con la animación
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.073 + (0.1 * animationController.value)),
+                  blurRadius: patternSize,
+                  spreadRadius: patternSize * 0.1,
+                ),
+                // Sombra adicional para el efecto de profundidad
+                BoxShadow(
+                  color: color.withOpacity(0.1 * animationController.value),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+            child: Column(
+              children: [
+                Icon(
+                  icon, 
+                  color: color.withOpacity(0.8 + (0.2 * animationController.value)), 
+                  size: 32 + (8 * animationController.value),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: color.withOpacity(0.8 + (0.2 * animationController.value)),
+                    fontSize: 14 + (4 * animationController.value),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12 + (1 * animationController.value),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
