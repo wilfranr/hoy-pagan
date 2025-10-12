@@ -1550,7 +1550,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _widgetOptions = <Widget>[
+    final List<Widget> widgetOptions = <Widget>[
       const Center(child: Text('Pagos')), // Placeholder
       ExpensesReportScreen(listaDeTransacciones: listaDeTransacciones, listaDeCategorias: listaDeCategorias), // Gastos
       _buildHomeTab(context), // Inicio
@@ -1561,7 +1561,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
-        children: _widgetOptions,
+        children: widgetOptions,
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

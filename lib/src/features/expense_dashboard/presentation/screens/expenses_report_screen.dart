@@ -32,6 +32,16 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
     _procesarDatos();
   }
 
+  @override
+  void didUpdateWidget(ExpensesReportScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Recalcular datos si las listas han cambiado
+    if (oldWidget.listaDeTransacciones != widget.listaDeTransacciones ||
+        oldWidget.listaDeCategorias != widget.listaDeCategorias) {
+      _procesarDatos();
+    }
+  }
+
   void _procesarDatos() {
     final ahora = DateTime.now();
     
