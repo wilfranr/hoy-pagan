@@ -49,7 +49,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                 t.fecha.isBefore(inicioSemana.add(const Duration(days: 7))))
             .toList();
         break;
-      case 'Ano':
+      case 'Año':
         transacciones = widget.listaDeTransacciones
             .where((t) =>
                 t.tipo == 'gasto' &&
@@ -108,7 +108,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                 t.fecha.isBefore(inicioSemanaAnterior.add(const Duration(days: 7))))
             .toList();
         break;
-      case 'Ano':
+      case 'Año':
         transacciones = widget.listaDeTransacciones
             .where((t) =>
                 t.tipo == 'gasto' &&
@@ -304,7 +304,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
-          children: ['Semana', 'Mes', 'Ano'].map((period) {
+          children: ['Semana', 'Mes', 'Año'].map((period) {
             final isSelected = _selectedPeriod == period;
             return Expanded(
               child: GestureDetector(

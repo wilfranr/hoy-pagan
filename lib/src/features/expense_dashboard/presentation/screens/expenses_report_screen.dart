@@ -62,7 +62,7 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
                 t.fecha.isBefore(inicioSemanaAnterior.add(const Duration(days: 7))))
             .fold(0.0, (sum, item) => sum + item.monto);
             
-      case 'Ano':
+      case 'Año':
         return widget.listaDeTransacciones
             .where((t) =>
                 t.tipo == 'gasto' &&
@@ -105,7 +105,7 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
                 t.fecha.isAfter(inicioSemana.subtract(const Duration(days: 1))) &&
                 t.fecha.isBefore(inicioSemana.add(const Duration(days: 7))))
             .toList();
-      case 'Ano':
+      case 'Año':
         return widget.listaDeTransacciones
             .where((t) =>
                 t.tipo == 'gasto' &&
@@ -224,7 +224,7 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
-                  children: ['Semana', 'Mes', 'Ano'].map((period) {
+                  children: ['Semana', 'Mes', 'Año'].map((period) {
                     final isSelected = _selectedPeriod == period;
                     return Expanded(
                       child: GestureDetector(
