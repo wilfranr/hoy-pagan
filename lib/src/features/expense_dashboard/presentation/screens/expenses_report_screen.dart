@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:kipu/src/features/transactions/data/models/transaccion_model.dart';
 import 'package:kipu/src/features/transactions/data/models/categoria_model.dart';
 import 'package:kipu/widgets/kipu_colors.dart';
+import 'package:kipu/src/features/expense_dashboard/presentation/screens/category_detail_screen.dart';
 
 class ExpensesReportScreen extends StatefulWidget {
   final List<Transaccion> listaDeTransacciones;
@@ -115,6 +116,20 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
   String _getMonthName(int monthIndex) {
     final months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN'];
     return months[monthIndex];
+  }
+
+  void _navigateToCategoryDetail(String categoriaNombre, bool isDark) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CategoryDetailScreen(
+          categoriaNombre: categoriaNombre,
+          listaDeTransacciones: widget.listaDeTransacciones,
+          listaDeCategorias: widget.listaDeCategorias,
+          periodoSeleccionado: _selectedPeriod,
+        ),
+      ),
+    );
   }
 
   @override
@@ -406,35 +421,50 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
               final categoria = entry.value;
               final isLast = index == sortedCategorias.length - 1;
               
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                decoration: BoxDecoration(
-                  border: isLast ? null : Border(
-                    bottom: BorderSide(
-                      color: isDark ? const Color(0xFF374151) : const Color(0xFFE5E7EB),
-                      width: 1,
+              return GestureDetector(
+                onTap: () => _navigateToCategoryDetail(categoria.key, isDark),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  decoration: BoxDecoration(
+                    border: isLast ? null : Border(
+                      bottom: BorderSide(
+                        color: isDark ? const Color(0xFF374151) : const Color(0xFFE5E7EB),
+                        width: 1,
+                      ),
                     ),
                   ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      categoria.key,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          categoria.key,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                        ),
                       ),
-                    ),
-                    Text(
-                      formatoMoneda(categoria.value),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white : Colors.black87,
+                      Row(
+                        children: [
+                          Text(
+                            formatoMoneda(categoria.value),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: isDark ? Colors.grey[500] : Colors.grey[400],
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             }).toList(),
