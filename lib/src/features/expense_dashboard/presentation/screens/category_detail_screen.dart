@@ -139,7 +139,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
           children: [
             Icon(
               _obtenerIconoCategoria(widget.categoriaNombre),
-              color: KipuColors.tealKipu,
+              color: Colors.red,
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -180,7 +180,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                     Icon(
                       Icons.calendar_today,
                       size: 16,
-                      color: _sortBy == 'fecha' ? KipuColors.tealKipu : null,
+                      color: _sortBy == 'fecha' ? Colors.red : null,
                     ),
                     const SizedBox(width: 8),
                     Text('Ordenar por fecha'),
@@ -189,7 +189,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                       Icon(
                         _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
                         size: 16,
-                        color: KipuColors.tealKipu,
+                        color: Colors.red,
                       ),
                     ],
                   ],
@@ -211,7 +211,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                       Icon(
                         _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
                         size: 16,
-                        color: KipuColors.tealKipu,
+                        color: Colors.red,
                       ),
                     ],
                   ],
@@ -263,7 +263,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                   margin: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? (isDark ? KipuColors.tealKipu : Colors.white)
+                        ? (isDark ? Colors.red : Colors.white)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(6),
                     boxShadow: isSelected
@@ -341,7 +341,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: KipuColors.tealKipu,
+              color: Colors.red,
             ),
           ),
         ],
@@ -407,12 +407,12 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: KipuColors.tealKipu.withOpacity(0.1),
+                color: Colors.red.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 Icons.receipt,
-                color: KipuColors.tealKipu,
+                color: Colors.red,
                 size: 24,
               ),
             ),
@@ -444,7 +444,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: KipuColors.tealKipu,
+                color: Colors.red,
               ),
             ),
           ),

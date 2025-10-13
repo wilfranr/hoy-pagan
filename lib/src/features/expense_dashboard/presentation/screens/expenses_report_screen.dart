@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:kipu/src/features/transactions/data/models/transaccion_model.dart';
 import 'package:kipu/src/features/transactions/data/models/categoria_model.dart';
-import 'package:kipu/widgets/kipu_colors.dart';
 import 'package:kipu/src/features/expense_dashboard/presentation/screens/category_detail_screen.dart';
 
 class ExpensesReportScreen extends StatefulWidget {
@@ -194,7 +193,7 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
                           margin: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? (isDark ? KipuColors.tealKipu : Colors.white)
+                                ? (isDark ? Colors.red : Colors.white)
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(6),
                             boxShadow: isSelected
@@ -282,11 +281,11 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
           const SizedBox(height: 8),
           Text(
             formatoMoneda(_totalGastado),
-            style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
           ),
           const SizedBox(height: 8),
           Row(
@@ -372,13 +371,13 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
                       return FlSpot(e.key.toDouble(), e.value);
                     }).toList(),
                     isCurved: true,
-                    color: KipuColors.tealKipu,
+                    color: Colors.red,
                     barWidth: 3,
                     isStrokeCapRound: true,
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: KipuColors.tealKipu.withOpacity(0.2),
+                      color: Colors.red.withOpacity(0.2),
                     ),
                   ),
                 ],
