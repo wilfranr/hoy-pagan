@@ -15,6 +15,7 @@ import 'package:kipu/src/features/user_profile/presentation/screens/registro_usu
 import 'package:kipu/src/features/expense_dashboard/presentation/screens/expenses_report_screen.dart';
 import 'package:kipu/src/features/expense_dashboard/presentation/screens/income_report_screen.dart';
 import 'package:kipu/src/features/transactions/presentation/screens/pagos_screen.dart';
+import 'package:kipu/src/features/transactions/data/models/pago_pendiente_model.dart';
 import 'package:kipu/widgets/kipu_confirmation_dialog.dart';
 
 // Widget personalizado para botón 3D con efecto de profundidad
@@ -177,6 +178,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<Transaccion> listaDeTransacciones = [];
   List<TransaccionRecurrente> listaDeTransaccionesRecurrentes = [];
   List<Categoria> listaDeCategorias = [];
+  List<PagoPendiente> listaDePagosPendientes = [];
   final int diaDePago = 1;
 
   // Controladores de animación para los botones
@@ -491,6 +493,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     await prefs.setString('transacciones', jsonEncode(listaDeTransacciones.map((t) => t.toJson()).toList()));
     await prefs.setString('categorias', jsonEncode(listaDeCategorias.map((c) => c.toJson()).toList()));
     await prefs.setString('transaccionesRecurrentes', jsonEncode(listaDeTransaccionesRecurrentes.map((t) => t.toJson()).toList()));
+    await prefs.setString('pagosPendientes', jsonEncode(listaDePagosPendientes.map((p) => p.toJson()).toList()));
   }
 
   Future<void> _cargarDatos() async {
@@ -526,6 +529,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       listaDeTransaccionesRecurrentes = [];
     }
 
+    final pagosPendientesJson = prefs.getString('pagosPendientes');
+    if (pagosPendientesJson != null) {
+      listaDePagosPendientes = (jsonDecode(pagosPendientesJson) as List).map((json) => PagoPendiente.fromJson(json)).toList();
+    } else {
+      listaDePagosPendientes = [];
+    }
+
     if (listaDeCategorias.isEmpty) {
       _inicializarCategorias();
     }
@@ -551,6 +561,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final hoy = DateTime.now();
     for (final transaccion in listaDeTransaccionesRecurrentes) {
       if (!transaccion.activa) continue;
+      
+      // Generar pagos pendientes para gastos recurrentes
+      if (transaccion.tipo == 'gasto') {
+        _generarPagosPendientes(transaccion);
+      }
+      
       bool esDiaCorrecto = false;
       switch (transaccion.frecuencia) {
         case 'semanal':
@@ -575,6 +591,53 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           }
         }
       }
+    }
+  }
+
+  void _generarPagosPendientes(TransaccionRecurrente transaccion) {
+    final hoy = DateTime.now();
+    final fechaVencimiento = _calcularFechaVencimiento(transaccion, hoy);
+    
+    // Verificar si ya existe un pago pendiente para este mes
+    final existePago = listaDePagosPendientes.any((pago) => 
+      pago.transaccionRecurrenteId == transaccion.id &&
+      pago.fechaVencimiento.year == fechaVencimiento.year &&
+      pago.fechaVencimiento.month == fechaVencimiento.month &&
+      !pago.pagado
+    );
+    
+    if (!existePago) {
+      final nuevoPago = PagoPendiente.desdeTransaccionRecurrente(
+        transaccionRecurrenteId: transaccion.id,
+        descripcion: transaccion.descripcion,
+        montoEstimado: transaccion.monto,
+        fechaVencimiento: fechaVencimiento,
+        tipoDeGasto: transaccion.tipoDeGasto,
+        datosFijos: transaccion.datosAdicionales,
+        categoriaId: transaccion.categoriaId,
+      );
+      
+      setState(() {
+        listaDePagosPendientes.add(nuevoPago);
+      });
+      
+      _guardarDatos();
+    }
+  }
+
+  DateTime _calcularFechaVencimiento(TransaccionRecurrente transaccion, DateTime hoy) {
+    switch (transaccion.frecuencia) {
+      case 'semanal':
+        // Vence en 7 días
+        return hoy.add(const Duration(days: 7));
+      case 'mensual':
+        // Vence el mismo día del próximo mes
+        return DateTime(hoy.year, hoy.month + 1, transaccion.fechaInicio.day);
+      case 'anual':
+        // Vence el mismo día del próximo año
+        return DateTime(hoy.year + 1, transaccion.fechaInicio.month, transaccion.fechaInicio.day);
+      default:
+        return hoy.add(const Duration(days: 30));
     }
   }
 
@@ -753,6 +816,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Gasto marcado como pagado: ${gasto.nombre}'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _completarPago(PagoPendiente pago, double montoReal, String referencia) {
+    // Marcar el pago como completado
+    pago.marcarComoPagado(montoReal: montoReal, referencia: referencia);
+    
+    // Crear una transacción normal
+    final nuevaTransaccion = Transaccion(
+      id: const Uuid().v4(),
+      descripcion: pago.descripcion,
+      monto: montoReal,
+      tipo: 'gasto',
+      fecha: DateTime.now(),
+      categoriaId: pago.categoriaId,
+    );
+    
+    setState(() {
+      listaDeTransacciones.add(nuevaTransaccion);
+      saldoDisponible -= montoReal;
+    });
+    
+    _guardarDatos();
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Pago completado: ${pago.descripcion}'),
         backgroundColor: Colors.green,
       ),
     );
@@ -1567,6 +1659,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       PagosScreen(
         listaDeGastos: listaDeGastos,
         listaDeCategorias: listaDeCategorias,
+        listaDePagosPendientes: listaDePagosPendientes,
+        onPagoCompletado: _completarPago,
       ), // Pagos
       const Center(child: Text('Espacios')), // Placeholder
     ];

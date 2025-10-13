@@ -11,6 +11,8 @@ class TransaccionRecurrente {
   String condicionFin; // 'numero_pagos', 'fecha_especifica', 'nunca'
   dynamic valorFin; // int para número de pagos o DateTime para fecha
   String categoriaId; // ID de la categoría asociada
+  String tipoDeGasto; // 'Servicio', 'Tarjeta', 'Crédito', 'Suscripción', etc.
+  Map<String, dynamic> datosAdicionales; // Información específica del tipo de gasto
 
   TransaccionRecurrente({
     required this.id,
@@ -23,6 +25,8 @@ class TransaccionRecurrente {
     required this.condicionFin,
     this.valorFin,
     required this.categoriaId,
+    this.tipoDeGasto = 'Servicio',
+    this.datosAdicionales = const {},
   });
 
   // Constructor factory para crear TransaccionRecurrente desde JSON
@@ -42,6 +46,8 @@ class TransaccionRecurrente {
             : json['valorFin'] as int)
         : null,
       categoriaId: json['categoriaId'] as String? ?? '',
+      tipoDeGasto: json['tipoDeGasto'] as String? ?? 'Servicio',
+      datosAdicionales: Map<String, dynamic>.from(json['datosAdicionales'] ?? {}),
     );
   }
 
@@ -60,6 +66,8 @@ class TransaccionRecurrente {
         ? (valorFin as DateTime).toIso8601String()
         : valorFin,
       'categoriaId': categoriaId,
+      'tipoDeGasto': tipoDeGasto,
+      'datosAdicionales': datosAdicionales,
     };
   }
 
@@ -73,6 +81,8 @@ class TransaccionRecurrente {
     required String condicionFin,
     dynamic valorFin,
     required String categoriaId,
+    String tipoDeGasto = 'Servicio',
+    Map<String, dynamic> datosAdicionales = const {},
   }) {
     return TransaccionRecurrente(
       id: const Uuid().v4(),
@@ -85,6 +95,8 @@ class TransaccionRecurrente {
       condicionFin: condicionFin,
       valorFin: valorFin,
       categoriaId: categoriaId,
+      tipoDeGasto: tipoDeGasto,
+      datosAdicionales: datosAdicionales,
     );
   }
 }

@@ -39,6 +39,9 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
   String _condicionFinRecurrente = 'nunca';
   int? _numeroPagos;
   DateTime? _fechaFin;
+  String _tipoDeGasto = 'Servicio';
+  Map<String, dynamic> _datosAdicionales = {};
+  final Map<String, TextEditingController> _datosAdicionalesControllers = {};
 
   @override
   void initState() {
@@ -52,6 +55,10 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
     _montoController.dispose();
     _descripcionController.dispose();
     _fechaController.dispose();
+    // Limpiar controladores de datos adicionales
+    for (var controller in _datosAdicionalesControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -172,6 +179,10 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
                   
                   // Campos adicionales para transacción recurrente
                   if (_esRecurrente) ...[
+                    const SizedBox(height: 16),
+                    _buildTipoDeGastoField(isDark),
+                    const SizedBox(height: 16),
+                    _buildDatosAdicionalesFields(isDark),
                     const SizedBox(height: 16),
                     _buildFrecuenciaField(isDark),
                     const SizedBox(height: 16),
@@ -731,6 +742,152 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
     );
   }
 
+  Widget _buildTipoDeGastoField(bool isDark) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Tipo de Gasto',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Manrope',
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: theme.dividerColor,
+            ),
+          ),
+          child: DropdownButtonFormField<String>(
+            value: _tipoDeGasto,
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+            items: const [
+              DropdownMenuItem(value: 'Servicio', child: Text('Servicio Público')),
+              DropdownMenuItem(value: 'Tarjeta', child: Text('Tarjeta de Crédito')),
+              DropdownMenuItem(value: 'Crédito', child: Text('Crédito')),
+              DropdownMenuItem(value: 'Suscripción', child: Text('Suscripción')),
+              DropdownMenuItem(value: 'Seguro', child: Text('Seguro')),
+              DropdownMenuItem(value: 'Otro', child: Text('Otro')),
+            ],
+            onChanged: (String? value) {
+              setState(() {
+                _tipoDeGasto = value ?? 'Servicio';
+                _datosAdicionales = {};
+                // Limpiar controladores anteriores
+                for (var controller in _datosAdicionalesControllers.values) {
+                  controller.dispose();
+                }
+                _datosAdicionalesControllers.clear();
+              });
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDatosAdicionalesFields(bool isDark) {
+    final theme = Theme.of(context);
+    final camposRequeridos = _getCamposRequeridos(_tipoDeGasto);
+    
+    if (camposRequeridos.isEmpty) return const SizedBox.shrink();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Información Adicional',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Manrope',
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...camposRequeridos.map((campo) {
+          final key = campo['key'] as String;
+          if (!_datosAdicionalesControllers.containsKey(key)) {
+            _datosAdicionalesControllers[key] = TextEditingController();
+          }
+          
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  campo['label'] as String,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Manrope',
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: theme.dividerColor,
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _datosAdicionalesControllers[key],
+                    decoration: InputDecoration(
+                      hintText: campo['hint'] as String,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    ),
+                    onChanged: (value) {
+                      _datosAdicionales[key] = value;
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  List<Map<String, String>> _getCamposRequeridos(String tipoDeGasto) {
+    switch (tipoDeGasto) {
+      case 'Servicio':
+        return [
+          {'key': 'empresa', 'label': 'Empresa', 'hint': 'Ej: Enel, Aguas Andinas'},
+          {'key': 'numeroContrato', 'label': 'Número de Contrato', 'hint': 'Ej: 123456789'},
+        ];
+      case 'Tarjeta':
+        return [
+          {'key': 'banco', 'label': 'Banco', 'hint': 'Ej: Banco de Chile'},
+          {'key': 'numeroTarjeta', 'label': 'Últimos 4 dígitos', 'hint': 'Ej: 1234'},
+        ];
+      case 'Crédito':
+        return [
+          {'key': 'entidad', 'label': 'Entidad Financiera', 'hint': 'Ej: Banco Santander'},
+          {'key': 'numeroCredito', 'label': 'Número de Crédito', 'hint': 'Ej: 987654321'},
+        ];
+      case 'Suscripción':
+        return [
+          {'key': 'servicio', 'label': 'Servicio', 'hint': 'Ej: Netflix, Spotify'},
+          {'key': 'plan', 'label': 'Plan', 'hint': 'Ej: Premium, Básico'},
+        ];
+      case 'Seguro':
+        return [
+          {'key': 'aseguradora', 'label': 'Aseguradora', 'hint': 'Ej: Mapfre, BCI'},
+          {'key': 'poliza', 'label': 'Número de Póliza', 'hint': 'Ej: POL123456'},
+        ];
+      default:
+        return [];
+    }
+  }
+
   void _guardarTransaccion() {
     if (_montoController.text.isEmpty || 
         _categoriaSeleccionada.isEmpty) {
@@ -788,6 +945,8 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
                   ? _fechaFin 
                   : null,
           categoriaId: _categoriaSeleccionada,
+          tipoDeGasto: _tipoDeGasto,
+          datosAdicionales: _datosAdicionales,
         );
         widget.onSaveRecurringTransaction!(transaccionRecurrente);
       }
