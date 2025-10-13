@@ -190,72 +190,91 @@ class _PagosScreenState extends State<PagosScreen> {
               final venceHoy = elemento['venceHoy'] as bool;
               final diasRestantes = elemento['diasRestantes'] as int;
               
-              return Container(
-                width: 160,
-                height: 120,
-                margin: const EdgeInsets.only(right: 16),
+              return GestureDetector(
+                onTap: () {
+                  if (elemento['tipo'] == 'pago') {
+                    // Buscar el pago correspondiente
+                    final pago = widget.listaDePagosPendientes.firstWhere(
+                      (p) => p.descripcion == elemento['nombre'] && !p.pagado
+                    );
+                    _mostrarDetallesPago(pago);
+                  } else {
+                    // Para gastos, mostrar información básica por ahora
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Detalles de ${elemento['nombre']}'),
+                        backgroundColor: colorAzulPagos,
+                      ),
+                    );
+                  }
+                },
                 child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(8),
-                    border: venceHoy 
-                      ? Border(
-                          top: BorderSide(
+                  width: 160,
+                  height: 120,
+                  margin: const EdgeInsets.only(right: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(8),
+                      border: venceHoy 
+                        ? Border(
+                            top: BorderSide(
+                              color: colorAzulPagos,
+                              width: 4,
+                            ),
+                          )
+                        : null,
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Icon(
+                            _getIconForCategoria(elemento['categoriaId'] as String),
                             color: colorAzulPagos,
-                            width: 4,
+                            size: 20,
                           ),
-                        )
-                      : null,
-                  ),
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).scaffoldBackgroundColor,
-                          borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Icon(
-                          _getIconForCategoria(elemento['categoriaId'] as String),
-                          color: colorAzulPagos,
-                          size: 20,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              elemento['nombre'] as String,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              venceHoy 
+                                ? 'Vence Hoy'
+                                : diasRestantes > 0
+                                  ? 'Vence en $diasRestantes días'
+                                  : 'Vencido',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: venceHoy 
+                                  ? colorAzulPagos 
+                                  : diasRestantes < 0 
+                                    ? Colors.red 
+                                    : Theme.of(context).textTheme.bodySmall?.color,
+                                fontWeight: venceHoy ? FontWeight.w500 : FontWeight.normal,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            elemento['nombre'] as String,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            venceHoy 
-                              ? 'Vence Hoy'
-                              : diasRestantes > 0
-                                ? 'Vence en $diasRestantes días'
-                                : 'Vencido',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: venceHoy 
-                                ? colorAzulPagos 
-                                : diasRestantes < 0 
-                                  ? Colors.red 
-                                  : Theme.of(context).textTheme.bodySmall?.color,
-                              fontWeight: venceHoy ? FontWeight.w500 : FontWeight.normal,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -461,7 +480,21 @@ class _PagosScreenState extends State<PagosScreen> {
                         color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                       onTap: () {
-                        // TODO: Implementar navegación a detalles
+                        if (servicio['tipo'] == 'pago') {
+                          // Buscar el pago correspondiente
+                          final pago = widget.listaDePagosPendientes.firstWhere(
+                            (p) => p.descripcion == servicio['nombre'] && !p.pagado
+                          );
+                          _mostrarDetallesPago(pago);
+                        } else {
+                          // Para gastos, mostrar información básica por ahora
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Detalles de ${servicio['nombre']}'),
+                              backgroundColor: colorAzulPagos,
+                            ),
+                          );
+                        }
                       },
                     ),
                     if (!isLast)
@@ -574,7 +607,21 @@ class _PagosScreenState extends State<PagosScreen> {
                         color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                       onTap: () {
-                        // TODO: Implementar navegación a detalles
+                        if (suscripcion['tipo'] == 'pago') {
+                          // Buscar el pago correspondiente
+                          final pago = widget.listaDePagosPendientes.firstWhere(
+                            (p) => p.descripcion == suscripcion['nombre'] && !p.pagado
+                          );
+                          _mostrarDetallesPago(pago);
+                        } else {
+                          // Para gastos, mostrar información básica por ahora
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Detalles de ${suscripcion['nombre']}'),
+                              backgroundColor: colorAzulPagos,
+                            ),
+                          );
+                        }
                       },
                     ),
                     if (!isLast)
