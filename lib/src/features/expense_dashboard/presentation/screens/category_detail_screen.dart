@@ -25,6 +25,13 @@ class CategoryDetailScreen extends StatefulWidget {
 class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
   String _sortBy = 'fecha'; // fecha, monto
   bool _sortAscending = false;
+  String _selectedPeriod = 'Mes';
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedPeriod = widget.periodoSeleccionado;
+  }
 
   // Obtener transacciones filtradas por categoría y período
   List<Transaccion> get _transaccionesFiltradas {
@@ -32,7 +39,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
     List<Transaccion> transacciones = [];
 
     // Filtrar por período
-    switch (widget.periodoSeleccionado) {
+    switch (_selectedPeriod) {
       case 'Semana':
         final inicioSemana = ahora.subtract(Duration(days: ahora.weekday - 1));
         transacciones = widget.listaDeTransacciones
@@ -216,6 +223,9 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
       ),
       body: Column(
         children: [
+          // Selector de período
+          _buildPeriodSelector(isDark),
+          
           // Resumen de la categoría
           _buildCategorySummary(isDark),
           
@@ -226,6 +236,63 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                 : _buildTransactionsList(transacciones, isDark),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodSelector(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1F2937) : const Color(0xFFE2E8F0),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: ['Semana', 'Mes', 'Ano'].map((period) {
+            final isSelected = _selectedPeriod == period;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedPeriod = period;
+                  });
+                },
+                child: Container(
+                  margin: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? (isDark ? KipuColors.tealKipu : Colors.white)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(6),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Text(
+                      period,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: isSelected
+                            ? (isDark ? Colors.white : Colors.black87)
+                            : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -252,7 +319,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Total ${widget.periodoSeleccionado.toLowerCase()}',
+                'Total ${_selectedPeriod.toLowerCase()}',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -303,7 +370,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'No se encontraron gastos en ${widget.categoriaNombre}\npara el período ${widget.periodoSeleccionado.toLowerCase()}',
+            'No se encontraron gastos en ${widget.categoriaNombre}\npara el período ${_selectedPeriod.toLowerCase()}',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
