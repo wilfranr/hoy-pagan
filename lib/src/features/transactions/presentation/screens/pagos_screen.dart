@@ -885,14 +885,110 @@ class _PagosScreenState extends State<PagosScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _buildDetallesPagoModal(pago),
+      builder: (context) => DetallesPagoModal(
+        pago: pago,
+        onPagoCompletado: widget.onPagoCompletado,
+        colorAzulPagos: colorAzulPagos,
+      ),
     );
   }
 
-  Widget _buildDetallesPagoModal(PagoPendiente pago) {
-    final montoController = TextEditingController(text: pago.montoEstimado.toString());
-    final referenciaController = TextEditingController();
+}
 
+class DetallesPagoModal extends StatefulWidget {
+  final PagoPendiente pago;
+  final Function(PagoPendiente, double, String) onPagoCompletado;
+  final Color colorAzulPagos;
+
+  const DetallesPagoModal({
+    Key? key,
+    required this.pago,
+    required this.onPagoCompletado,
+    required this.colorAzulPagos,
+  }) : super(key: key);
+
+  @override
+  State<DetallesPagoModal> createState() => _DetallesPagoModalState();
+}
+
+class _DetallesPagoModalState extends State<DetallesPagoModal> {
+  late TextEditingController montoController;
+  late TextEditingController referenciaController;
+  late DateTime fechaVencimientoSeleccionada;
+
+  @override
+  void initState() {
+    super.initState();
+    montoController = TextEditingController(text: widget.pago.montoEstimado.toString());
+    referenciaController = TextEditingController();
+    fechaVencimientoSeleccionada = widget.pago.fechaVencimiento;
+  }
+
+  @override
+  void dispose() {
+    montoController.dispose();
+    referenciaController.dispose();
+    super.dispose();
+  }
+
+  String _formatearFecha(DateTime fecha) {
+    return '${fecha.day}/${fecha.month}/${fecha.year}';
+  }
+
+  String _capitalizar(String texto) {
+    if (texto.isEmpty) return texto;
+    return texto[0].toUpperCase() + texto.substring(1);
+  }
+
+  Color _getColorEstadoVencimiento(DateTime fechaVencimiento) {
+    final ahora = DateTime.now();
+    final diferencia = fechaVencimiento.difference(DateTime(ahora.year, ahora.month, ahora.day)).inDays;
+    
+    if (diferencia < 0) {
+      return Colors.red; // Vencido
+    } else if (diferencia == 0) {
+      return widget.colorAzulPagos; // Vence hoy
+    } else if (diferencia <= 3) {
+      return Colors.orange; // Vence pronto
+    } else {
+      return Colors.green; // Tiempo suficiente
+    }
+  }
+
+  IconData _getIconoEstadoVencimiento(DateTime fechaVencimiento) {
+    final ahora = DateTime.now();
+    final diferencia = fechaVencimiento.difference(DateTime(ahora.year, ahora.month, ahora.day)).inDays;
+    
+    if (diferencia < 0) {
+      return Icons.warning; // Vencido
+    } else if (diferencia == 0) {
+      return Icons.today; // Vence hoy
+    } else if (diferencia <= 3) {
+      return Icons.schedule; // Vence pronto
+    } else {
+      return Icons.check_circle; // Tiempo suficiente
+    }
+  }
+
+  String _getTextoEstadoVencimiento(DateTime fechaVencimiento) {
+    final ahora = DateTime.now();
+    final diferencia = fechaVencimiento.difference(DateTime(ahora.year, ahora.month, ahora.day)).inDays;
+    
+    if (diferencia < 0) {
+      return 'Vencido hace ${diferencia.abs()} días';
+    } else if (diferencia == 0) {
+      return 'Vence hoy';
+    } else if (diferencia == 1) {
+      return 'Vence mañana';
+    } else if (diferencia <= 3) {
+      return 'Vence en $diferencia días';
+    } else {
+      return 'Vence en $diferencia días';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       decoration: BoxDecoration(
@@ -940,12 +1036,12 @@ class _PagosScreenState extends State<PagosScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Text('Descripción: ${pago.descripcion}'),
-                    Text('Tipo: ${pago.tipoDeGasto}'),
-                    if (pago.datosFijos.isNotEmpty) ...[
+                    Text('Descripción: ${widget.pago.descripcion}'),
+                    Text('Tipo: ${widget.pago.tipoDeGasto}'),
+                    if (widget.pago.datosFijos.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text('Datos adicionales:'),
-                      ...pago.datosFijos.entries.map((entry) => 
+                      ...widget.pago.datosFijos.entries.map((entry) => 
                         Padding(
                           padding: const EdgeInsets.only(left: 16, top: 4),
                           child: Text('${_capitalizar(entry.key)}: ${entry.value}'),
@@ -990,6 +1086,108 @@ class _PagosScreenState extends State<PagosScreen> {
               ),
             ),
             
+            const SizedBox(height: 16),
+            
+            // Campo de fecha de vencimiento
+            InkWell(
+              onTap: () async {
+                final fechaSeleccionada = await showDatePicker(
+                  context: context,
+                  initialDate: fechaVencimientoSeleccionada,
+                  firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: Theme.of(context).colorScheme.copyWith(
+                          primary: widget.colorAzulPagos,
+                        ),
+                      ),
+                      child: child!,
+                    );
+                  },
+                );
+                
+                if (fechaSeleccionada != null) {
+                  setState(() {
+                    fechaVencimientoSeleccionada = fechaSeleccionada;
+                  });
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Theme.of(context).dividerColor),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      color: widget.colorAzulPagos,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Fecha de Vencimiento',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).textTheme.bodySmall?.color,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _formatearFecha(fechaVencimientoSeleccionada),
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Indicador de estado de vencimiento
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: _getColorEstadoVencimiento(fechaVencimientoSeleccionada).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _getColorEstadoVencimiento(fechaVencimientoSeleccionada).withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _getIconoEstadoVencimiento(fechaVencimientoSeleccionada),
+                    color: _getColorEstadoVencimiento(fechaVencimientoSeleccionada),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _getTextoEstadoVencimiento(fechaVencimientoSeleccionada),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: _getColorEstadoVencimiento(fechaVencimientoSeleccionada),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
             const SizedBox(height: 20),
             
             // Botón de completar pago
@@ -997,14 +1195,17 @@ class _PagosScreenState extends State<PagosScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  final montoReal = double.tryParse(montoController.text) ?? pago.montoEstimado;
+                  final montoReal = double.tryParse(montoController.text) ?? widget.pago.montoEstimado;
                   final referencia = referenciaController.text.trim();
                   
-                  widget.onPagoCompletado(pago, montoReal, referencia);
+                  // Actualizar la fecha de vencimiento del pago
+                  widget.pago.fechaVencimiento = fechaVencimientoSeleccionada;
+                  
+                  widget.onPagoCompletado(widget.pago, montoReal, referencia);
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: colorAzulPagos,
+                  backgroundColor: widget.colorAzulPagos,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
