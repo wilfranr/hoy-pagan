@@ -192,49 +192,51 @@ class _PagosScreenState extends State<PagosScreen> {
               
               return Container(
                 width: 160,
+                height: 120,
                 margin: const EdgeInsets.only(right: 16),
-                child: Column(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(8),
-                        border: venceHoy 
-                          ? Border(
-                              top: BorderSide(
-                                color: colorAzulPagos,
-                                width: 4,
-                              ),
-                            )
-                          : null,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(8),
+                    border: venceHoy 
+                      ? Border(
+                          top: BorderSide(
+                            color: colorAzulPagos,
+                            width: 4,
+                          ),
+                        )
+                      : null,
+                  ),
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Icon(
+                          _getIconForCategoria(elemento['categoriaId'] as String),
+                          color: colorAzulPagos,
+                          size: 20,
+                        ),
                       ),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).scaffoldBackgroundColor,
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: Icon(
-                              _getIconForCategoria(elemento['categoriaId'] as String),
-                              color: colorAzulPagos,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
                           Text(
                             elemento['nombre'] as String,
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           Text(
                             venceHoy 
                               ? 'Vence Hoy'
@@ -248,12 +250,13 @@ class _PagosScreenState extends State<PagosScreen> {
                                   ? Colors.red 
                                   : Theme.of(context).textTheme.bodySmall?.color,
                               fontWeight: venceHoy ? FontWeight.w500 : FontWeight.normal,
+                              fontSize: 11,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
