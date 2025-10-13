@@ -56,21 +56,14 @@ class _PagosScreenState extends State<PagosScreen> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildResumenCard(gastosPendientes, pagosPendientes),
-          const SizedBox(height: 24),
-          if (pagosPendientes.isNotEmpty) ...[
-            _buildPagosPendientesSection(pagosPendientes),
-            const SizedBox(height: 24),
-          ],
-          if (gastosPendientes.isNotEmpty) ...[
-            _buildProximosVencimientos(gastosPendientes),
-            const SizedBox(height: 24),
-            _buildCategoriasSection(gastosPendientes),
-          ],
+          _buildProximosVencimientosSection(gastosPendientes, pagosPendientes),
+          _buildServiciosPublicosSection(gastosPendientes, pagosPendientes),
+          _buildSuscripcionesSection(gastosPendientes, pagosPendientes),
+          const SizedBox(height: 100), // Espacio para el botón flotante
         ],
       ),
     );
@@ -104,38 +97,169 @@ class _PagosScreenState extends State<PagosScreen> {
     final totalPagos = pagosPendientes.fold<double>(0.0, (sum, pago) => sum + pago.montoActual);
     final totalGeneral = totalGastos + totalPagos;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Total Pagos del Mes',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).textTheme.bodySmall?.color,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
               formatoMoneda(totalGeneral),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: colorAzulPagos,
+                fontSize: 36,
               ),
             ),
-            if (pagosPendientes.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                '${pagosPendientes.length} pagos recurrentes pendientes',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
-              ),
-            ],
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildProximosVencimientosSection(List<Gasto> gastosPendientes, List<PagoPendiente> pagosPendientes) {
+    // Combinar todos los elementos pendientes
+    final todosLosElementos = <Map<String, dynamic>>[];
+    
+    // Agregar gastos pendientes
+    for (final gasto in gastosPendientes) {
+      todosLosElementos.add({
+        'tipo': 'gasto',
+        'nombre': gasto.nombre,
+        'monto': gasto.monto,
+        'fechaVencimiento': DateTime(DateTime.now().year, DateTime.now().month, gasto.diaDePago),
+        'categoriaId': gasto.categoriaId,
+        'venceHoy': DateTime.now().day == gasto.diaDePago,
+        'diasRestantes': gasto.diaDePago - DateTime.now().day,
+      });
+    }
+    
+    // Agregar pagos pendientes
+    for (final pago in pagosPendientes) {
+      todosLosElementos.add({
+        'tipo': 'pago',
+        'nombre': pago.descripcion,
+        'monto': pago.montoActual,
+        'fechaVencimiento': pago.fechaVencimiento,
+        'categoriaId': pago.categoriaId,
+        'venceHoy': pago.venceHoy,
+        'diasRestantes': pago.fechaVencimiento.difference(DateTime.now()).inDays,
+      });
+    }
+    
+    // Ordenar por fecha de vencimiento
+    todosLosElementos.sort((a, b) => a['fechaVencimiento'].compareTo(b['fechaVencimiento']));
+    
+    if (todosLosElementos.isEmpty) return const SizedBox.shrink();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'Próximos Vencimientos',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 120,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: todosLosElementos.length,
+            itemBuilder: (context, index) {
+              final elemento = todosLosElementos[index];
+              final venceHoy = elemento['venceHoy'] as bool;
+              final diasRestantes = elemento['diasRestantes'] as int;
+              
+              return Container(
+                width: 160,
+                margin: const EdgeInsets.only(right: 16),
+                child: Column(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(8),
+                        border: venceHoy 
+                          ? Border(
+                              top: BorderSide(
+                                color: colorAzulPagos,
+                                width: 4,
+                              ),
+                            )
+                          : null,
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Icon(
+                              _getIconForCategoria(elemento['categoriaId'] as String),
+                              color: colorAzulPagos,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            elemento['nombre'] as String,
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            venceHoy 
+                              ? 'Vence Hoy'
+                              : diasRestantes > 0
+                                ? 'Vence en $diasRestantes días'
+                                : 'Vencido',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: venceHoy 
+                                ? colorAzulPagos 
+                                : diasRestantes < 0 
+                                  ? Colors.red 
+                                  : Theme.of(context).textTheme.bodySmall?.color,
+                              fontWeight: venceHoy ? FontWeight.w500 : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -235,6 +359,233 @@ class _PagosScreenState extends State<PagosScreen> {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildServiciosPublicosSection(List<Gasto> gastosPendientes, List<PagoPendiente> pagosPendientes) {
+    // Filtrar servicios públicos (gastos y pagos relacionados con servicios)
+    final serviciosPublicos = <Map<String, dynamic>>[];
+    
+    // Agregar gastos de servicios públicos
+    for (final gasto in gastosPendientes) {
+      final categoriaNombre = _obtenerNombreCategoria(gasto.categoriaId).toLowerCase();
+      if (categoriaNombre.contains('hogar') || 
+          categoriaNombre.contains('servicio') ||
+          categoriaNombre.contains('luz') ||
+          categoriaNombre.contains('agua') ||
+          categoriaNombre.contains('gas') ||
+          categoriaNombre.contains('internet')) {
+        serviciosPublicos.add({
+          'tipo': 'gasto',
+          'nombre': gasto.nombre,
+          'monto': gasto.monto,
+          'categoriaId': gasto.categoriaId,
+          'ultimoPago': gasto.monto,
+        });
+      }
+    }
+    
+    // Agregar pagos de servicios públicos
+    for (final pago in pagosPendientes) {
+      if (pago.tipoDeGasto == 'Servicio') {
+        serviciosPublicos.add({
+          'tipo': 'pago',
+          'nombre': pago.descripcion,
+          'monto': pago.montoActual,
+          'categoriaId': pago.categoriaId,
+          'ultimoPago': pago.montoActual,
+        });
+      }
+    }
+    
+    if (serviciosPublicos.isEmpty) return const SizedBox.shrink();
+    
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Servicios Públicos',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: serviciosPublicos.asMap().entries.map((entry) {
+                final index = entry.key;
+                final servicio = entry.value;
+                final isLast = index == serviciosPublicos.length - 1;
+                
+                return Column(
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Icon(
+                          _getIconForCategoria(servicio['categoriaId'] as String),
+                          color: colorAzulPagos,
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        servicio['nombre'] as String,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Último pago: ${formatoMoneda(servicio['ultimoPago'] as double)}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
+                      ),
+                      trailing: Icon(
+                        Icons.chevron_right,
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                      onTap: () {
+                        // TODO: Implementar navegación a detalles
+                      },
+                    ),
+                    if (!isLast)
+                      Divider(
+                        height: 1,
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                      ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuscripcionesSection(List<Gasto> gastosPendientes, List<PagoPendiente> pagosPendientes) {
+    // Filtrar suscripciones
+    final suscripciones = <Map<String, dynamic>>[];
+    
+    // Agregar gastos de suscripciones
+    for (final gasto in gastosPendientes) {
+      final categoriaNombre = _obtenerNombreCategoria(gasto.categoriaId).toLowerCase();
+      if (categoriaNombre.contains('entretenimiento') || 
+          categoriaNombre.contains('suscripcion') ||
+          categoriaNombre.contains('netflix') ||
+          categoriaNombre.contains('spotify') ||
+          categoriaNombre.contains('streaming')) {
+        suscripciones.add({
+          'tipo': 'gasto',
+          'nombre': gasto.nombre,
+          'monto': gasto.monto,
+          'categoriaId': gasto.categoriaId,
+          'ultimoPago': gasto.monto,
+        });
+      }
+    }
+    
+    // Agregar pagos de suscripciones
+    for (final pago in pagosPendientes) {
+      if (pago.tipoDeGasto == 'Suscripción') {
+        suscripciones.add({
+          'tipo': 'pago',
+          'nombre': pago.descripcion,
+          'monto': pago.montoActual,
+          'categoriaId': pago.categoriaId,
+          'ultimoPago': pago.montoActual,
+        });
+      }
+    }
+    
+    if (suscripciones.isEmpty) return const SizedBox.shrink();
+    
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Suscripciones',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: suscripciones.asMap().entries.map((entry) {
+                final index = entry.key;
+                final suscripcion = entry.value;
+                final isLast = index == suscripciones.length - 1;
+                
+                return Column(
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Icon(
+                          _getIconForCategoria(suscripcion['categoriaId'] as String),
+                          color: colorAzulPagos,
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        suscripcion['nombre'] as String,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Último pago: ${formatoMoneda(suscripcion['ultimoPago'] as double)}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
+                      ),
+                      trailing: Icon(
+                        Icons.chevron_right,
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                      onTap: () {
+                        // TODO: Implementar navegación a detalles
+                      },
+                    ),
+                    if (!isLast)
+                      Divider(
+                        height: 1,
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                      ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
