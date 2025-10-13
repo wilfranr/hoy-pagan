@@ -237,7 +237,7 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
                           margin: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? (isDark ? Colors.green : Colors.white)
+                                ? (isDark ? Theme.of(context).primaryColor : Colors.white)
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(6),
                             boxShadow: isSelected
@@ -325,11 +325,11 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
           const SizedBox(height: 8),
           Text(
             formatoMoneda(_totalIngresado),
-            style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
-            ),
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).primaryColor,
+              ),
           ),
           const SizedBox(height: 8),
           Row(
@@ -347,7 +347,7 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: _esVariacionPositiva ? Colors.green : Colors.red,
+                  color: _esVariacionPositiva ? Theme.of(context).primaryColor : Colors.red,
                 ),
               ),
             ],
@@ -415,13 +415,13 @@ class _IncomeReportScreenState extends State<IncomeReportScreen> {
                       return FlSpot(e.key.toDouble(), e.value);
                     }).toList(),
                     isCurved: true,
-                    color: Colors.green,
+                    color: Theme.of(context).primaryColor,
                     barWidth: 3,
                     isStrokeCapRound: true,
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: Colors.green.withOpacity(0.2),
+                      color: Theme.of(context).primaryColor.withOpacity(0.2),
                     ),
                   ),
                 ],

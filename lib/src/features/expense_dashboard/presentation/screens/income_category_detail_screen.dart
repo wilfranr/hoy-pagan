@@ -192,7 +192,7 @@ class _IncomeCategoryDetailScreenState extends State<IncomeCategoryDetailScreen>
           children: [
             Icon(
               _obtenerIconoCategoria(widget.categoriaNombre),
-              color: Colors.green,
+              color: Theme.of(context).primaryColor,
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -242,7 +242,7 @@ class _IncomeCategoryDetailScreenState extends State<IncomeCategoryDetailScreen>
                       Icon(
                         _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
                         size: 16,
-                        color: Colors.green,
+                        color: Theme.of(context).primaryColor,
                       ),
                     ],
                   ],
@@ -264,7 +264,7 @@ class _IncomeCategoryDetailScreenState extends State<IncomeCategoryDetailScreen>
                       Icon(
                         _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
                         size: 16,
-                        color: Colors.green,
+                        color: Theme.of(context).primaryColor,
                       ),
                     ],
                   ],
@@ -316,7 +316,7 @@ class _IncomeCategoryDetailScreenState extends State<IncomeCategoryDetailScreen>
                   margin: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? (isDark ? Colors.green : Colors.white)
+                        ? (isDark ? Theme.of(context).primaryColor : Colors.white)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(6),
                     boxShadow: isSelected
@@ -394,7 +394,7 @@ class _IncomeCategoryDetailScreenState extends State<IncomeCategoryDetailScreen>
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: Colors.green,
+              color: Theme.of(context).primaryColor,
             ),
           ),
           const SizedBox(height: 8),
@@ -413,7 +413,7 @@ class _IncomeCategoryDetailScreenState extends State<IncomeCategoryDetailScreen>
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: _esVariacionCategoriaPositiva ? Colors.green : Colors.red,
+                  color: _esVariacionCategoriaPositiva ? Theme.of(context).primaryColor : Colors.red,
                 ),
               ),
             ],
@@ -481,12 +481,12 @@ class _IncomeCategoryDetailScreenState extends State<IncomeCategoryDetailScreen>
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 Icons.receipt,
-                color: Colors.green,
+                color: Theme.of(context).primaryColor,
                 size: 24,
               ),
             ),
@@ -518,7 +518,7 @@ class _IncomeCategoryDetailScreenState extends State<IncomeCategoryDetailScreen>
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.green,
+                color: Theme.of(context).primaryColor,
               ),
             ),
           ),
