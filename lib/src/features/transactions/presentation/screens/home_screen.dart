@@ -1552,7 +1552,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final List<Widget> widgetOptions = <Widget>[
       const Center(child: Text('Pagos')), // Placeholder
-      ExpensesReportScreen(listaDeTransacciones: listaDeTransacciones, listaDeCategorias: listaDeCategorias), // Gastos
+      ExpensesReportScreen(
+        key: ValueKey('expenses_${listaDeTransacciones.length}'),
+        listaDeTransacciones: listaDeTransacciones, 
+        listaDeCategorias: listaDeCategorias
+      ), // Gastos
       _buildHomeTab(context), // Inicio
       const Center(child: Text('Tarjetas')), // Placeholder
       const Center(child: Text('Espacios')), // Placeholder

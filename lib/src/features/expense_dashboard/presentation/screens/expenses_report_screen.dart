@@ -21,77 +21,64 @@ class ExpensesReportScreen extends StatefulWidget {
 
 class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
   String _selectedPeriod = 'Mes';
-  late List<Transaccion> _gastos;
-  late double _totalGastado;
-  late Map<String, double> _gastosPorCategoria;
-  late List<double> _monthlyData;
 
-  @override
-  void initState() {
-    super.initState();
-    _procesarDatos();
+  // Métodos para calcular datos dinámicamente
+  List<Transaccion> get _gastos {
+    return _procesarGastos();
   }
 
-  @override
-  void didUpdateWidget(ExpensesReportScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Recalcular datos si las listas han cambiado
-    if (oldWidget.listaDeTransacciones != widget.listaDeTransacciones ||
-        oldWidget.listaDeCategorias != widget.listaDeCategorias) {
-      _procesarDatos();
+  double get _totalGastado {
+    return _gastos.fold(0.0, (sum, item) => sum + item.monto);
+  }
+
+  Map<String, double> get _gastosPorCategoria {
+    Map<String, double> gastosPorCategoria = {};
+    for (var gasto in _gastos) {
+      final categoriaNombre = _obtenerNombreCategoria(gasto.categoriaId);
+      gastosPorCategoria.update(
+        categoriaNombre,
+        (value) => value + gasto.monto,
+        ifAbsent: () => gasto.monto,
+      );
     }
+    return gastosPorCategoria;
   }
 
-  void _procesarDatos() {
+  List<double> get _monthlyData {
+    return _generateMonthlyData();
+  }
+
+  List<Transaccion> _procesarGastos() {
     final ahora = DateTime.now();
     
     // Filtrar gastos según el período seleccionado
     switch (_selectedPeriod) {
       case 'Semana':
         final inicioSemana = ahora.subtract(Duration(days: ahora.weekday - 1));
-        _gastos = widget.listaDeTransacciones
+        return widget.listaDeTransacciones
             .where((t) =>
                 t.tipo == 'gasto' &&
                 t.fecha.isAfter(inicioSemana.subtract(const Duration(days: 1))) &&
                 t.fecha.isBefore(inicioSemana.add(const Duration(days: 7))))
             .toList();
-        break;
       case 'Ano':
-        _gastos = widget.listaDeTransacciones
+        return widget.listaDeTransacciones
             .where((t) =>
                 t.tipo == 'gasto' &&
                 t.fecha.year == ahora.year)
             .toList();
-        break;
       default: // Mes
-        _gastos = widget.listaDeTransacciones
+        return widget.listaDeTransacciones
             .where((t) =>
                 t.tipo == 'gasto' &&
                 t.fecha.month == ahora.month &&
                 t.fecha.year == ahora.year)
             .toList();
     }
-
-    // Calcular el total gastado
-    _totalGastado = _gastos.fold(0.0, (sum, item) => sum + item.monto);
-
-    // Agrupar gastos por categoría
-    _gastosPorCategoria = {};
-    for (var gasto in _gastos) {
-      final categoriaNombre = _obtenerNombreCategoria(gasto.categoriaId);
-      _gastosPorCategoria.update(
-        categoriaNombre,
-        (value) => value + gasto.monto,
-        ifAbsent: () => gasto.monto,
-      );
-    }
-
-    // Generar datos mensuales para el gráfico
-    _generateMonthlyData();
   }
 
-  void _generateMonthlyData() {
-    _monthlyData = List.generate(6, (index) {
+  List<double> _generateMonthlyData() {
+    return List.generate(6, (index) {
       final mes = DateTime.now().month - (5 - index);
       final ano = DateTime.now().year;
       if (mes <= 0) {
@@ -186,7 +173,6 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
                         onTap: () {
                           setState(() {
                             _selectedPeriod = period;
-                            _procesarDatos();
                           });
                         },
                         child: Container(
