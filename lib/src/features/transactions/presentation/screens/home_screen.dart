@@ -13,6 +13,7 @@ import 'package:kipu/src/features/transactions/presentation/screens/edit_transac
 import 'package:kipu/src/features/theme_selector/presentation/screens/theme_selector_screen.dart';
 import 'package:kipu/src/features/user_profile/presentation/screens/registro_usuario_screen.dart';
 import 'package:kipu/src/features/expense_dashboard/presentation/screens/expenses_report_screen.dart';
+import 'package:kipu/src/features/expense_dashboard/presentation/screens/income_report_screen.dart';
 import 'package:kipu/widgets/kipu_confirmation_dialog.dart';
 
 // Widget personalizado para botón 3D con efecto de profundidad
@@ -1551,7 +1552,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final List<Widget> widgetOptions = <Widget>[
-      const Center(child: Text('Pagos')), // Placeholder
+      IncomeReportScreen(
+        key: ValueKey('income_${listaDeTransacciones.length}'),
+        listaDeTransacciones: listaDeTransacciones, 
+        listaDeCategorias: listaDeCategorias
+      ), // Ingresos
       ExpensesReportScreen(
         key: ValueKey('expenses_${listaDeTransacciones.length}'),
         listaDeTransacciones: listaDeTransacciones, 
@@ -1583,8 +1588,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(context, Icons.swap_horiz, 'Pagos', 0),
-                _buildNavItem(context, Icons.bar_chart, 'Gastos', 1),
+                _buildNavItem(context, Icons.trending_up, 'Ingresos', 0),
+                _buildNavItem(context, Icons.trending_down, 'Gastos', 1),
                 _buildNavItem(context, Icons.home, 'Inicio', 2),
                 _buildNavItem(context, Icons.credit_card, 'Tarjetas', 3),
                 _buildNavItem(context, Icons.grid_view, 'Espacios', 4),
