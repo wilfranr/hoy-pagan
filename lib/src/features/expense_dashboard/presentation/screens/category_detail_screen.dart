@@ -92,6 +92,60 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
     return _transaccionesFiltradas.fold(0.0, (sum, item) => sum + item.monto);
   }
 
+  // Calcular gastos de la categoría en el período anterior
+  double get _totalCategoriaPeriodoAnterior {
+    final ahora = DateTime.now();
+    List<Transaccion> transacciones = [];
+
+    // Filtrar por período anterior
+    switch (_selectedPeriod) {
+      case 'Semana':
+        final inicioSemanaAnterior = ahora.subtract(Duration(days: ahora.weekday - 1 + 7));
+        transacciones = widget.listaDeTransacciones
+            .where((t) =>
+                t.tipo == 'gasto' &&
+                t.fecha.isAfter(inicioSemanaAnterior.subtract(const Duration(days: 1))) &&
+                t.fecha.isBefore(inicioSemanaAnterior.add(const Duration(days: 7))))
+            .toList();
+        break;
+      case 'Ano':
+        transacciones = widget.listaDeTransacciones
+            .where((t) =>
+                t.tipo == 'gasto' &&
+                t.fecha.year == ahora.year - 1)
+            .toList();
+        break;
+      default: // Mes
+        final mesAnterior = ahora.month == 1 ? 12 : ahora.month - 1;
+        final anoAnterior = ahora.month == 1 ? ahora.year - 1 : ahora.year;
+        transacciones = widget.listaDeTransacciones
+            .where((t) =>
+                t.tipo == 'gasto' &&
+                t.fecha.month == mesAnterior &&
+                t.fecha.year == anoAnterior)
+            .toList();
+    }
+
+    // Filtrar por categoría
+    final categoriaId = _obtenerCategoriaId(widget.categoriaNombre);
+    transacciones = transacciones
+        .where((t) => t.categoriaId == categoriaId)
+        .toList();
+
+    return transacciones.fold(0.0, (sum, item) => sum + item.monto);
+  }
+
+  // Calcular porcentaje de variación para la categoría
+  double get _porcentajeVariacionCategoria {
+    if (_totalCategoriaPeriodoAnterior == 0) return 0.0;
+    return ((_totalCategoria - _totalCategoriaPeriodoAnterior) / _totalCategoriaPeriodoAnterior) * 100;
+  }
+
+  // Determinar si la variación es positiva (buena para gastos)
+  bool get _esVariacionCategoriaPositiva {
+    return _porcentajeVariacionCategoria < 0; // Para gastos, disminución es buena
+  }
+
   String _obtenerCategoriaId(String categoriaNombre) {
     try {
       return widget.listaDeCategorias.firstWhere((c) => c.nombre == categoriaNombre).id;
@@ -343,6 +397,27 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
               fontWeight: FontWeight.bold,
               color: Colors.red,
             ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                'vs ${_selectedPeriod.toLowerCase()} anterior',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${_porcentajeVariacionCategoria >= 0 ? '+' : ''}${_porcentajeVariacionCategoria.toStringAsFixed(1)}%',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: _esVariacionCategoriaPositiva ? Colors.green : Colors.red,
+                ),
+              ),
+            ],
           ),
         ],
       ),

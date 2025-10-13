@@ -48,6 +48,50 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
     return _generateMonthlyData();
   }
 
+  // Calcular gastos del período anterior para comparación
+  double get _gastosPeriodoAnterior {
+    final ahora = DateTime.now();
+    
+    switch (_selectedPeriod) {
+      case 'Semana':
+        final inicioSemanaAnterior = ahora.subtract(Duration(days: ahora.weekday - 1 + 7));
+        return widget.listaDeTransacciones
+            .where((t) =>
+                t.tipo == 'gasto' &&
+                t.fecha.isAfter(inicioSemanaAnterior.subtract(const Duration(days: 1))) &&
+                t.fecha.isBefore(inicioSemanaAnterior.add(const Duration(days: 7))))
+            .fold(0.0, (sum, item) => sum + item.monto);
+            
+      case 'Ano':
+        return widget.listaDeTransacciones
+            .where((t) =>
+                t.tipo == 'gasto' &&
+                t.fecha.year == ahora.year - 1)
+            .fold(0.0, (sum, item) => sum + item.monto);
+            
+      default: // Mes
+        final mesAnterior = ahora.month == 1 ? 12 : ahora.month - 1;
+        final anoAnterior = ahora.month == 1 ? ahora.year - 1 : ahora.year;
+        return widget.listaDeTransacciones
+            .where((t) =>
+                t.tipo == 'gasto' &&
+                t.fecha.month == mesAnterior &&
+                t.fecha.year == anoAnterior)
+            .fold(0.0, (sum, item) => sum + item.monto);
+    }
+  }
+
+  // Calcular porcentaje de variación
+  double get _porcentajeVariacion {
+    if (_gastosPeriodoAnterior == 0) return 0.0;
+    return ((_totalGastado - _gastosPeriodoAnterior) / _gastosPeriodoAnterior) * 100;
+  }
+
+  // Determinar si la variación es positiva (buena para gastos)
+  bool get _esVariacionPositiva {
+    return _porcentajeVariacion < 0; // Para gastos, disminución es buena
+  }
+
   List<Transaccion> _procesarGastos() {
     final ahora = DateTime.now();
     
@@ -291,7 +335,7 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
           Row(
             children: [
               Text(
-                'Este ${_selectedPeriod.toLowerCase()}',
+                'vs ${_selectedPeriod.toLowerCase()} anterior',
                 style: TextStyle(
                   fontSize: 16,
                   color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -299,11 +343,11 @@ class _ExpensesReportScreenState extends State<ExpensesReportScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                '+15%',
-                style: const TextStyle(
+                '${_porcentajeVariacion >= 0 ? '+' : ''}${_porcentajeVariacion.toStringAsFixed(1)}%',
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Colors.green,
+                  color: _esVariacionPositiva ? Colors.green : Colors.red,
                 ),
               ),
             ],
