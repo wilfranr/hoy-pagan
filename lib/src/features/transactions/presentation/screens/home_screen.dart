@@ -1701,7 +1701,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildNavItem(BuildContext context, IconData icon, String label, int index) {
     final isSelected = _selectedIndex == index;
-    final color = isSelected ? Theme.of(context).primaryColor : Theme.of(context).textTheme.bodySmall?.color;
+    
+    // Definir colores específicos para cada vista
+    Color getSelectedColor() {
+      switch (index) {
+        case 0: // Ingresos
+          return const Color(0xFF00C896); // Verde azulado de la marca
+        case 1: // Gastos
+          return Colors.red;
+        case 3: // Pagos
+          return const Color(0xFF3B82F6); // Azul específico de pagos
+        default: // Inicio (2) y Espacios (4)
+          return Theme.of(context).primaryColor;
+      }
+    }
+    
+    final color = isSelected ? getSelectedColor() : Theme.of(context).textTheme.bodySmall?.color;
     
     return GestureDetector(
       onTap: () => _onItemTapped(index),

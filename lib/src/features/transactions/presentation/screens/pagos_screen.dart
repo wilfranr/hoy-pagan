@@ -121,7 +121,7 @@ class _PagosScreenState extends State<PagosScreen> {
               formatoMoneda(totalGeneral),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).primaryColor,
+                color: colorAzulPagos,
               ),
             ),
             if (pagosPendientes.isNotEmpty) ...[
@@ -178,12 +178,12 @@ class _PagosScreenState extends State<PagosScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _getColorForCategoria(pago.categoriaId).withOpacity(0.1),
+                    color: colorAzulPagos.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Icon(
                     _getIconForCategoria(pago.categoriaId),
-                    color: _getColorForCategoria(pago.categoriaId),
+                    color: colorAzulPagos,
                     size: 20,
                   ),
                 ),
@@ -284,7 +284,7 @@ class _PagosScreenState extends State<PagosScreen> {
                           children: [
                             Icon(
                               _getIconForCategoria(gasto.categoriaId),
-                              color: _getColorForCategoria(gasto.categoriaId),
+                              color: colorAzulPagos,
                               size: 20,
                             ),
                             const SizedBox(width: 8),
@@ -304,7 +304,7 @@ class _PagosScreenState extends State<PagosScreen> {
                           formatoMoneda(gasto.monto),
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).primaryColor,
+                            color: colorAzulPagos,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -396,12 +396,12 @@ class _PagosScreenState extends State<PagosScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _getColorForCategoria(categoriaId).withOpacity(0.1),
+                    color: colorAzulPagos.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Icon(
                     _getIconForCategoria(categoriaId),
-                    color: _getColorForCategoria(categoriaId),
+                    color: colorAzulPagos,
                     size: 20,
                   ),
                 ),
