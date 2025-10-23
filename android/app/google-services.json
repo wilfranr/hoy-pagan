@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "339184280127",
+    "project_id": "kipu-app-87fa3",
+    "storage_bucket": "kipu-app-87fa3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:339184280127:android:dc6fb2335d78d39ebfce8a",
+        "android_client_info": {
+          "package_name": "com.kipu.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-Nns3p_af_zdeBViHN78xq5_Jw5ECg0s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

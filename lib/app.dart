@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:kipu/src/features/transactions/presentation/screens/home_screen.dart';
+import 'package:kipu/src/features/auth/presentation/auth_wrapper.dart';
 import 'package:kipu/src/features/theme_selector/presentation/providers/theme_provider.dart';
 import 'package:kipu/src/features/theme_selector/config/app_themes.dart';
 
@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
             theme: AppThemes.lightTheme,
             darkTheme: AppThemes.darkTheme,
             themeMode: themeProvider.themeMode,
-            home: const HomeScreen(),
+            home: const AuthWrapper(),
             debugShowCheckedModeBanner: false,
             locale: const Locale('es', 'ES'),
             localizationsDelegates: const [
