@@ -29,15 +29,31 @@ El código fuente principal se encuentra en el directorio `lib/` y está organiz
 
 ## Cómo Ejecutar la Aplicación
 
-1.  Asegúrate de tener Flutter instalado y configurado en tu entorno.
-2.  Abre una terminal en el directorio raíz del proyecto.
-3.  Ejecuta el siguiente comando para instalar las dependencias:
+### Configuración local en este equipo
+
+Flutter está instalado en `~/development/flutter`. Para usar esa instalación sin modificar el PATH global, puedes definir `FLUTTER_HOME` (opcional) y añadir el binario al PATH en la terminal donde ejecutes los comandos:
+
+```bash
+export FLUTTER_HOME="$HOME/development/flutter"
+export PATH="$FLUTTER_HOME/bin:$PATH"
+```
+
+El script `run_iphone12pro.sh` detecta automáticamente `FLUTTER_HOME` y, si no está definido, toma `~/development/flutter` como valor por defecto.
+
+### Pasos para ejecutar
+
+1.  Abre una terminal en el directorio raíz del proyecto.
+2.  Instala las dependencias:
     ```bash
-    flutter pub get
+    "$HOME/development/flutter/bin/flutter" pub get
     ```
-4.  Ejecuta la aplicación en un emulador o dispositivo conectado:
+3.  Ejecuta la aplicación en un emulador o dispositivo conectado:
     ```bash
-    flutter run
+    "$HOME/development/flutter/bin/flutter" run
+    ```
+4.  Para emular rápidamente la resolución de un iPhone 12 Pro en Chrome:
+    ```bash
+    ./run_iphone12pro.sh
     ```
 
 ## Funcionalidades Clave Implementadas

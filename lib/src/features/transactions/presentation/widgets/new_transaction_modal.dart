@@ -10,7 +10,8 @@ class NewTransactionModal extends StatefulWidget {
   final String tipo;
   final List<Categoria> categorias;
   final Function(Transaccion) onSaveTransaction;
-  final Function(TransaccionRecurrente)? onSaveRecurringTransaction;
+  final Future<void> Function(TransaccionRecurrente)?
+  onSaveRecurringTransaction;
   final bool allowTypeChange;
 
   const NewTransactionModal({
@@ -30,7 +31,7 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
   final TextEditingController _montoController = TextEditingController();
   final TextEditingController _descripcionController = TextEditingController();
   final TextEditingController _fechaController = TextEditingController();
-  
+
   String _categoriaSeleccionada = '';
   String _tipoTransaccion = '';
   DateTime _fechaSeleccionada = DateTime.now();
@@ -56,7 +57,9 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
   }
 
   List<Categoria> get _categoriasFiltradas {
-    return widget.categorias.where((cat) => cat.tipo == _tipoTransaccion).toList();
+    return widget.categorias
+        .where((cat) => cat.tipo == _tipoTransaccion)
+        .toList();
   }
 
   String get _tituloModal {
@@ -93,7 +96,7 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: BoxDecoration(
@@ -109,11 +112,7 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: theme.dividerColor,
-                ),
-              ),
+              border: Border(bottom: BorderSide(color: theme.dividerColor)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -137,7 +136,7 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
               ],
             ),
           ),
-          
+
           // Contenido del formulario
           Expanded(
             child: SingleChildScrollView(
@@ -148,28 +147,28 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
                   // Campo Monto
                   _buildMontoField(isDark),
                   const SizedBox(height: 24),
-                  
+
                   // Selector de Tipo (solo si se permite cambiar)
                   if (widget.allowTypeChange) ...[
                     _buildTipoField(isDark),
                     const SizedBox(height: 24),
                   ],
-                  
+
                   // Campo Categoría
                   _buildCategoriaField(isDark),
                   const SizedBox(height: 24),
-                  
+
                   // Campo Fecha
                   _buildFechaField(isDark),
                   const SizedBox(height: 24),
-                  
+
                   // Campo Descripción
                   _buildDescripcionField(isDark),
                   const SizedBox(height: 24),
-                  
+
                   // Switch para transacción recurrente
                   _buildRecurrenteSwitch(isDark),
-                  
+
                   // Campos adicionales para transacción recurrente
                   if (_esRecurrente) ...[
                     const SizedBox(height: 16),
@@ -189,21 +188,17 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
               ),
             ),
           ),
-          
+
           // Footer con botón de guardar
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(
-                  color: theme.dividerColor,
-                ),
-              ),
+              border: Border(top: BorderSide(color: theme.dividerColor)),
             ),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _guardarTransaccion,
+                onPressed: () => _guardarTransaccion(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _colorPrimario,
                   foregroundColor: Colors.white,
@@ -244,9 +239,7 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.dividerColor,
-            ),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: TextField(
             controller: _montoController,
@@ -272,7 +265,10 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
                 fontWeight: FontWeight.bold,
               ),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
             ),
           ),
         ),
@@ -296,15 +292,16 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.dividerColor,
-            ),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: DropdownButtonFormField<String>(
             value: _tipoTransaccion,
             decoration: const InputDecoration(
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
             ),
             items: const [
               DropdownMenuItem(value: 'ingreso', child: Text('Ingreso')),
@@ -315,7 +312,8 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
             onChanged: (String? value) {
               setState(() {
                 _tipoTransaccion = value ?? 'gasto';
-                _categoriaSeleccionada = ''; // Limpiar categoría al cambiar tipo
+                _categoriaSeleccionada =
+                    ''; // Limpiar categoría al cambiar tipo
               });
             },
           ),
@@ -340,22 +338,22 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.dividerColor,
-            ),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: DropdownButtonFormField<String>(
-            value: _categoriaSeleccionada.isEmpty ? null : _categoriaSeleccionada,
+            value: _categoriaSeleccionada.isEmpty
+                ? null
+                : _categoriaSeleccionada,
             decoration: const InputDecoration(
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
             ),
             hint: Text(
               'Seleccionar categoría',
-              style: TextStyle(
-                color: theme.hintColor,
-                fontFamily: 'Manrope',
-              ),
+              style: TextStyle(color: theme.hintColor, fontFamily: 'Manrope'),
             ),
             items: _categoriasFiltradas.map((categoria) {
               return DropdownMenuItem<String>(
@@ -406,9 +404,7 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.dividerColor,
-            ),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: TextField(
             controller: _fechaController,
@@ -419,7 +415,10 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
             ),
             decoration: InputDecoration(
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
               suffixIcon: Icon(
                 Icons.calendar_today,
                 color: theme.hintColor,
@@ -437,7 +436,9 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
               if (fecha != null) {
                 setState(() {
                   _fechaSeleccionada = fecha;
-                  _fechaController.text = DateFormat('yyyy-MM-dd').format(fecha);
+                  _fechaController.text = DateFormat(
+                    'yyyy-MM-dd',
+                  ).format(fecha);
                 });
               }
             },
@@ -463,9 +464,7 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.dividerColor,
-            ),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: TextField(
             controller: _descripcionController,
@@ -496,17 +495,11 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: theme.dividerColor,
-        ),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.repeat,
-            color: _colorPrimario,
-            size: 20,
-          ),
+          Icon(Icons.repeat, color: _colorPrimario, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -559,15 +552,16 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.dividerColor,
-            ),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: DropdownButtonFormField<String>(
             value: _frecuenciaRecurrente,
             decoration: const InputDecoration(
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
             ),
             items: const [
               DropdownMenuItem(value: 'semanal', child: Text('Semanal')),
@@ -601,20 +595,27 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.dividerColor,
-            ),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: DropdownButtonFormField<String>(
             value: _condicionFinRecurrente,
             decoration: const InputDecoration(
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
             ),
             items: const [
               DropdownMenuItem(value: 'nunca', child: Text('Nunca')),
-              DropdownMenuItem(value: 'numero_pagos', child: Text('Número de pagos')),
-              DropdownMenuItem(value: 'fecha_especifica', child: Text('Fecha específica')),
+              DropdownMenuItem(
+                value: 'numero_pagos',
+                child: Text('Número de pagos'),
+              ),
+              DropdownMenuItem(
+                value: 'fecha_especifica',
+                child: Text('Fecha específica'),
+              ),
             ],
             onChanged: (String? value) {
               setState(() {
@@ -643,9 +644,7 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.dividerColor,
-            ),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: TextField(
             keyboardType: TextInputType.number,
@@ -660,7 +659,10 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
                 fontFamily: 'Manrope',
               ),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
             ),
             onChanged: (value) {
               _numeroPagos = int.tryParse(value);
@@ -687,9 +689,7 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.dividerColor,
-            ),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: TextField(
             readOnly: true,
@@ -704,7 +704,10 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
                 fontFamily: 'Manrope',
               ),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
               suffixIcon: Icon(
                 Icons.calendar_today,
                 color: theme.hintColor,
@@ -714,7 +717,8 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
             onTap: () async {
               final fecha = await showDatePicker(
                 context: context,
-                initialDate: _fechaFin ?? DateTime.now().add(const Duration(days: 30)),
+                initialDate:
+                    _fechaFin ?? DateTime.now().add(const Duration(days: 30)),
                 firstDate: DateTime.now(),
                 lastDate: DateTime(2030),
                 locale: const Locale('es', 'ES'),
@@ -731,9 +735,8 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
     );
   }
 
-  void _guardarTransaccion() {
-    if (_montoController.text.isEmpty || 
-        _categoriaSeleccionada.isEmpty) {
+  Future<void> _guardarTransaccion() async {
+    if (_montoController.text.isEmpty || _categoriaSeleccionada.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Por favor completa todos los campos obligatorios'),
@@ -745,9 +748,7 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
     final monto = parseMonto(_montoController.text);
     if (monto <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor ingresa un monto válido'),
-        ),
+        const SnackBar(content: Text('Por favor ingresa un monto válido')),
       );
       return;
     }
@@ -755,7 +756,8 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
     if (_esRecurrente) {
       if (widget.onSaveRecurringTransaction != null) {
         // Validaciones adicionales para transacciones recurrentes
-        if (_condicionFinRecurrente == 'numero_pagos' && (_numeroPagos == null || _numeroPagos! <= 0)) {
+        if (_condicionFinRecurrente == 'numero_pagos' &&
+            (_numeroPagos == null || _numeroPagos! <= 0)) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Por favor ingresa un número válido de pagos'),
@@ -763,8 +765,9 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
           );
           return;
         }
-        
-        if (_condicionFinRecurrente == 'fecha_especifica' && _fechaFin == null) {
+
+        if (_condicionFinRecurrente == 'fecha_especifica' &&
+            _fechaFin == null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Por favor selecciona una fecha de fin'),
@@ -775,34 +778,39 @@ class _NewTransactionModalState extends State<NewTransactionModal> {
 
         final transaccionRecurrente = TransaccionRecurrente(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
-          descripcion: _descripcionController.text.isEmpty ? 'Sin descripción' : _descripcionController.text,
+          descripcion: _descripcionController.text.isEmpty
+              ? 'Sin descripción'
+              : _descripcionController.text,
           monto: monto,
           tipo: _tipoTransaccion,
           activa: true,
           fechaInicio: _fechaSeleccionada,
           frecuencia: _frecuenciaRecurrente,
           condicionFin: _condicionFinRecurrente,
-          valorFin: _condicionFinRecurrente == 'numero_pagos' 
-              ? _numeroPagos 
-              : _condicionFinRecurrente == 'fecha_especifica' 
-                  ? _fechaFin 
-                  : null,
+          valorFin: _condicionFinRecurrente == 'numero_pagos'
+              ? _numeroPagos
+              : _condicionFinRecurrente == 'fecha_especifica'
+              ? _fechaFin
+              : null,
           categoriaId: _categoriaSeleccionada,
         );
-        widget.onSaveRecurringTransaction!(transaccionRecurrente);
+        await widget.onSaveRecurringTransaction!(transaccionRecurrente);
       }
     } else {
       final transaccion = Transaccion(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         tipo: _tipoTransaccion,
         monto: monto,
-        descripcion: _descripcionController.text.isEmpty ? 'Sin descripción' : _descripcionController.text,
+        descripcion: _descripcionController.text.isEmpty
+            ? 'Sin descripción'
+            : _descripcionController.text,
         fecha: _fechaSeleccionada,
         categoriaId: _categoriaSeleccionada,
       );
       widget.onSaveTransaction(transaccion);
     }
 
+    if (!mounted) return;
     Navigator.pop(context);
   }
 }

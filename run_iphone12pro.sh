@@ -8,11 +8,20 @@ echo "📱 Resolución: 390x844 CSS pixels"
 echo "📏 Equivalente a: 1170x2532 píxeles físicos"
 echo ""
 
+FLUTTER_HOME=${FLUTTER_HOME:-"$HOME/development/flutter"}
+FLUTTER_BIN="$FLUTTER_HOME/bin/flutter"
+
+if [ ! -x "$FLUTTER_BIN" ]; then
+  echo "ERROR: No se encontró Flutter en: $FLUTTER_BIN"
+  echo "AYUDA: Ajusta la variable FLUTTER_HOME o instala Flutter en ~/development/flutter"
+  exit 1
+fi
+
 # Detener cualquier proceso anterior
 pkill -f "flutter run"
 
 # Ejecutar con Chrome en modo iPhone 12 Pro
-flutter run -d chrome \
+"$FLUTTER_BIN" run -d chrome \
   --web-port=8080 \
   --web-hostname=localhost \
   --dart-define=FLUTTER_WEB_USE_SKIA=true \

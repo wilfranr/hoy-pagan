@@ -14,6 +14,7 @@ import 'package:kipu/src/features/theme_selector/presentation/screens/theme_sele
 import 'package:kipu/src/features/user_profile/presentation/screens/registro_usuario_screen.dart';
 import 'package:kipu/src/features/expense_dashboard/presentation/screens/expenses_report_screen.dart';
 import 'package:kipu/src/features/expense_dashboard/presentation/screens/income_report_screen.dart';
+import 'package:kipu/src/services/notifications/notification_service.dart';
 import 'package:kipu/widgets/kipu_confirmation_dialog.dart';
 
 // Widget personalizado para botón 3D con efecto de profundidad
@@ -37,7 +38,8 @@ class Button3D extends StatefulWidget {
   State<Button3D> createState() => _Button3DState();
 }
 
-class _Button3DState extends State<Button3D> with SingleTickerProviderStateMixin {
+class _Button3DState extends State<Button3D>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _pressAnimation;
   late Animation<double> _borderRadiusAnimation;
@@ -54,26 +56,17 @@ class _Button3DState extends State<Button3D> with SingleTickerProviderStateMixin
     _pressAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _borderRadiusAnimation = Tween<double>(
       begin: 28.0,
       end: 20.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _translateAnimation = Tween<double>(
       begin: 0.0,
       end: 2.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -117,7 +110,9 @@ class _Button3DState extends State<Button3D> with SingleTickerProviderStateMixin
                     width: widget.size,
                     height: widget.size - 3,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(_borderRadiusAnimation.value),
+                      borderRadius: BorderRadius.circular(
+                        _borderRadiusAnimation.value,
+                      ),
                       color: Colors.black.withOpacity(0.3),
                     ),
                   ),
@@ -132,7 +127,9 @@ class _Button3DState extends State<Button3D> with SingleTickerProviderStateMixin
                       width: widget.size,
                       height: widget.size,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(_borderRadiusAnimation.value),
+                        borderRadius: BorderRadius.circular(
+                          _borderRadiusAnimation.value,
+                        ),
                         color: widget.primaryColor,
                         boxShadow: [
                           BoxShadow(
@@ -188,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    
+
     // Inicializar controladores de animación con duración más larga
     _ingresoAnimationController = AnimationController(
       duration: const Duration(milliseconds: 600),
@@ -210,11 +207,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    
-    _cargarDatos().then((_) {
-      _verificarPagosDeGastos();
-      _revisarTransaccionesRecurrentes();
-    });
+
+    _bootstrapHome();
+  }
+
+  Future<void> _bootstrapHome() async {
+    await _cargarDatos();
+    _verificarPagosDeGastos();
+    await _revisarTransaccionesRecurrentes();
+    await NotificationService.instance.rebuildRecurringTransactionNotifications(
+      listaDeTransaccionesRecurrentes,
+    );
   }
 
   @override
@@ -252,13 +255,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               listaDeGastos: listaDeGastos,
               listaDeCategorias: listaDeCategorias,
               listaDeTransaccionesRecurrentes: listaDeTransaccionesRecurrentes,
-              onDatosActualizados: (nuevoIngreso, nuevosGastos, nuevasRecurrentes) {
-                setState(() {
-                  ingresoMensual = nuevoIngreso;
-                  listaDeGastos = nuevosGastos;
-                  listaDeTransaccionesRecurrentes = nuevasRecurrentes;
-                });
-              },
+              onDatosActualizados:
+                  (nuevoIngreso, nuevosGastos, nuevasRecurrentes) async {
+                    setState(() {
+                      ingresoMensual = nuevoIngreso;
+                      listaDeGastos = nuevosGastos;
+                      listaDeTransaccionesRecurrentes = nuevasRecurrentes;
+                    });
+                    await NotificationService.instance
+                        .rebuildRecurringTransactionNotifications(
+                          nuevasRecurrentes,
+                        );
+                  },
             ),
           ),
         );
@@ -281,9 +289,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       case 'tema':
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const ThemeSelectorScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const ThemeSelectorScreen()),
         );
         break;
       case 'cerrar_sesion':
@@ -315,7 +321,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 );
               },
-              child: const Text('Cerrar Sesión', style: TextStyle(color: Colors.red)),
+              child: const Text(
+                'Cerrar Sesión',
+                style: TextStyle(color: Colors.red),
+              ),
             ),
           ],
         );
@@ -328,7 +337,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   IconData _getIconForCategoria(String categoriaId) {
     if (categoriaId.isEmpty) return Icons.help;
     try {
-      final categoria = listaDeCategorias.firstWhere((cat) => cat.id == categoriaId);
+      final categoria = listaDeCategorias.firstWhere(
+        (cat) => cat.id == categoriaId,
+      );
       return IconData(categoria.icono, fontFamily: 'MaterialIcons');
     } catch (e) {
       return Icons.help;
@@ -338,7 +349,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Color _getColorForCategoria(String categoriaId) {
     if (categoriaId.isEmpty) return Colors.grey;
     try {
-      final categoria = listaDeCategorias.firstWhere((cat) => cat.id == categoriaId);
+      final categoria = listaDeCategorias.firstWhere(
+        (cat) => cat.id == categoriaId,
+      );
       return categoria.tipo == 'ingreso' ? Colors.green : Colors.red;
     } catch (e) {
       return Colors.grey;
@@ -358,15 +371,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ? 'Pagado el día ${gasto.diaDePago} · ${_obtenerNombreCategoria(gasto.categoriaId)}'
             : 'Vence el día ${gasto.diaDePago} · ${_obtenerNombreCategoria(gasto.categoriaId)}',
         'monto': formatoMoneda(gasto.monto),
-        'montoColor': gasto.pagado ? Colors.grey : Theme.of(context).textTheme.bodyLarge?.color,
-        'icon': gasto.pagado ? Icons.check_circle : _getIconForCategoria(gasto.categoriaId),
-        'color': gasto.pagado ? Colors.green : _getColorForCategoria(gasto.categoriaId),
+        'montoColor': gasto.pagado
+            ? Colors.grey
+            : Theme.of(context).textTheme.bodyLarge?.color,
+        'icon': gasto.pagado
+            ? Icons.check_circle
+            : _getIconForCategoria(gasto.categoriaId),
+        'color': gasto.pagado
+            ? Colors.green
+            : _getColorForCategoria(gasto.categoriaId),
         'pagado': gasto.pagado,
         'fecha': null,
       });
     }
 
-    final transaccionesRecientes = listaDeTransacciones.toList()..sort((a, b) => b.fecha.compareTo(a.fecha));
+    final transaccionesRecientes = listaDeTransacciones.toList()
+      ..sort((a, b) => b.fecha.compareTo(a.fecha));
 
     for (var transaccion in transaccionesRecientes.take(20)) {
       String titulo = '';
@@ -393,16 +413,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
 
       final nombreCategoria = _obtenerNombreCategoria(transaccion.categoriaId);
-      final subtitulo = transaccion.descripcion == 'Sin descripción' 
+      final subtitulo = transaccion.descripcion == 'Sin descripción'
           ? hora
           : '${transaccion.descripcion} - $hora';
-      
+
       transaccionesPorFecha[fechaKey]!.add({
         'isGasto': false,
         'isHeader': false,
         'titulo': titulo,
         'subtitulo': subtitulo,
-        'monto': transaccion.tipo == 'ingreso' ? '+${formatoMoneda(transaccion.monto)}' : formatoMoneda(transaccion.monto),
+        'monto': transaccion.tipo == 'ingreso'
+            ? '+${formatoMoneda(transaccion.monto)}'
+            : formatoMoneda(transaccion.monto),
         'montoColor': transaccion.tipo == 'ingreso' ? Colors.green : Colors.red,
         'icon': _getIconForCategoria(transaccion.categoriaId),
         'color': _getColorForCategoria(transaccion.categoriaId),
@@ -413,7 +435,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     final fechasOrdenadas = transaccionesPorFecha.keys.toList()
-      ..sort((a, b) => DateFormat('dd/MM/yyyy').parse(b).compareTo(DateFormat('dd/MM/yyyy').parse(a)));
+      ..sort(
+        (a, b) => DateFormat(
+          'dd/MM/yyyy',
+        ).parse(b).compareTo(DateFormat('dd/MM/yyyy').parse(a)),
+      );
 
     for (var fecha in fechasOrdenadas) {
       final fechaObj = DateFormat('dd/MM/yyyy').parse(fecha);
@@ -434,7 +460,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       });
       // Ordenar transacciones del día por hora (más reciente primero)
       final transaccionesOrdenadas = transaccionesPorFecha[fecha]!
-          ..sort((a, b) => b['fecha'].compareTo(a['fecha']));
+        ..sort((a, b) => b['fecha'].compareTo(a['fecha']));
       items.addAll(transaccionesOrdenadas);
     }
     return items;
@@ -442,40 +468,150 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   void _inicializarCategorias() {
     listaDeCategorias = [
-      Categoria.nueva(nombre: 'Salario', tipo: 'ingreso', icono: Icons.work.codePoint),
-      Categoria.nueva(nombre: 'Bonificación', tipo: 'ingreso', icono: Icons.card_giftcard.codePoint),
-      Categoria.nueva(nombre: 'Ventas', tipo: 'ingreso', icono: Icons.sell.codePoint),
-      Categoria.nueva(nombre: 'Otros Ingresos', tipo: 'ingreso', icono: Icons.attach_money.codePoint),
-      Categoria.nueva(nombre: 'Hogar', tipo: 'gasto', icono: Icons.home.codePoint),
-      Categoria.nueva(nombre: 'Transporte', tipo: 'gasto', icono: Icons.directions_car.codePoint),
-      Categoria.nueva(nombre: 'Alimentación', tipo: 'gasto', icono: Icons.restaurant.codePoint),
-      Categoria.nueva(nombre: 'Salud', tipo: 'gasto', icono: Icons.medical_services.codePoint),
-      Categoria.nueva(nombre: 'Entretenimiento', tipo: 'gasto', icono: Icons.movie.codePoint),
-      Categoria.nueva(nombre: 'Educación', tipo: 'gasto', icono: Icons.school.codePoint),
-      Categoria.nueva(nombre: 'Deudas', tipo: 'gasto', icono: Icons.credit_card.codePoint),
-      Categoria.nueva(nombre: 'Fondo de Emergencia', tipo: 'ahorro', icono: Icons.emergency.codePoint),
-      Categoria.nueva(nombre: 'Ahorro para Vivienda', tipo: 'ahorro', icono: Icons.home_work.codePoint),
-      Categoria.nueva(nombre: 'Ahorro para Vehículo', tipo: 'ahorro', icono: Icons.directions_car.codePoint),
-      Categoria.nueva(nombre: 'Ahorro para Educación', tipo: 'ahorro', icono: Icons.school.codePoint),
-      Categoria.nueva(nombre: 'Vacaciones y Ocio', tipo: 'ahorro', icono: Icons.flight.codePoint),
-      Categoria.nueva(nombre: 'Compras Grandes', tipo: 'ahorro', icono: Icons.shopping_bag.codePoint),
-      Categoria.nueva(nombre: 'Metas Personales', tipo: 'ahorro', icono: Icons.flag.codePoint),
-      Categoria.nueva(nombre: 'Ahorro General', tipo: 'ahorro', icono: Icons.savings.codePoint),
-      Categoria.nueva(nombre: 'Renta Variable (Acciones)', tipo: 'inversion', icono: Icons.trending_up.codePoint),
-      Categoria.nueva(nombre: 'Criptomonedas', tipo: 'inversion', icono: Icons.currency_bitcoin.codePoint),
-      Categoria.nueva(nombre: 'Renta Fija (Bonos, CDT)', tipo: 'inversion', icono: Icons.account_balance.codePoint),
-      Categoria.nueva(nombre: 'Bienes Raíces', tipo: 'inversion', icono: Icons.business.codePoint),
-      Categoria.nueva(nombre: 'Fondos de Inversión / ETFs', tipo: 'inversion', icono: Icons.pie_chart.codePoint),
-      Categoria.nueva(nombre: 'Plan de Retiro Voluntario', tipo: 'inversion', icono: Icons.account_balance_wallet.codePoint),
-      Categoria.nueva(nombre: 'Materias Primas', tipo: 'inversion', icono: Icons.diamond.codePoint),
-      Categoria.nueva(nombre: 'Emprendimientos / Negocios', tipo: 'inversion', icono: Icons.business_center.codePoint),
+      Categoria.nueva(
+        nombre: 'Salario',
+        tipo: 'ingreso',
+        icono: Icons.work.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Bonificación',
+        tipo: 'ingreso',
+        icono: Icons.card_giftcard.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Ventas',
+        tipo: 'ingreso',
+        icono: Icons.sell.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Otros Ingresos',
+        tipo: 'ingreso',
+        icono: Icons.attach_money.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Hogar',
+        tipo: 'gasto',
+        icono: Icons.home.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Transporte',
+        tipo: 'gasto',
+        icono: Icons.directions_car.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Alimentación',
+        tipo: 'gasto',
+        icono: Icons.restaurant.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Salud',
+        tipo: 'gasto',
+        icono: Icons.medical_services.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Entretenimiento',
+        tipo: 'gasto',
+        icono: Icons.movie.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Educación',
+        tipo: 'gasto',
+        icono: Icons.school.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Deudas',
+        tipo: 'gasto',
+        icono: Icons.credit_card.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Fondo de Emergencia',
+        tipo: 'ahorro',
+        icono: Icons.emergency.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Ahorro para Vivienda',
+        tipo: 'ahorro',
+        icono: Icons.home_work.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Ahorro para Vehículo',
+        tipo: 'ahorro',
+        icono: Icons.directions_car.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Ahorro para Educación',
+        tipo: 'ahorro',
+        icono: Icons.school.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Vacaciones y Ocio',
+        tipo: 'ahorro',
+        icono: Icons.flight.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Compras Grandes',
+        tipo: 'ahorro',
+        icono: Icons.shopping_bag.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Metas Personales',
+        tipo: 'ahorro',
+        icono: Icons.flag.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Ahorro General',
+        tipo: 'ahorro',
+        icono: Icons.savings.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Renta Variable (Acciones)',
+        tipo: 'inversion',
+        icono: Icons.trending_up.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Criptomonedas',
+        tipo: 'inversion',
+        icono: Icons.currency_bitcoin.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Renta Fija (Bonos, CDT)',
+        tipo: 'inversion',
+        icono: Icons.account_balance.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Bienes Raíces',
+        tipo: 'inversion',
+        icono: Icons.business.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Fondos de Inversión / ETFs',
+        tipo: 'inversion',
+        icono: Icons.pie_chart.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Plan de Retiro Voluntario',
+        tipo: 'inversion',
+        icono: Icons.account_balance_wallet.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Materias Primas',
+        tipo: 'inversion',
+        icono: Icons.diamond.codePoint,
+      ),
+      Categoria.nueva(
+        nombre: 'Emprendimientos / Negocios',
+        tipo: 'inversion',
+        icono: Icons.business_center.codePoint,
+      ),
     ];
   }
 
   String _obtenerNombreCategoria(String categoriaId) {
     if (categoriaId.isEmpty) return 'Sin categoría';
     try {
-      final categoria = listaDeCategorias.firstWhere((cat) => cat.id == categoriaId);
+      final categoria = listaDeCategorias.firstWhere(
+        (cat) => cat.id == categoriaId,
+      );
       return categoria.nombre;
     } catch (e) {
       return 'Sin categoría';
@@ -486,10 +622,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('saldo', saldoDisponible);
     await prefs.setDouble('ingresoMensual', ingresoMensual);
-    await prefs.setString('gastos', jsonEncode(listaDeGastos.map((g) => g.toJson()).toList()));
-    await prefs.setString('transacciones', jsonEncode(listaDeTransacciones.map((t) => t.toJson()).toList()));
-    await prefs.setString('categorias', jsonEncode(listaDeCategorias.map((c) => c.toJson()).toList()));
-    await prefs.setString('transaccionesRecurrentes', jsonEncode(listaDeTransaccionesRecurrentes.map((t) => t.toJson()).toList()));
+    await prefs.setString(
+      'gastos',
+      jsonEncode(listaDeGastos.map((g) => g.toJson()).toList()),
+    );
+    await prefs.setString(
+      'transacciones',
+      jsonEncode(listaDeTransacciones.map((t) => t.toJson()).toList()),
+    );
+    await prefs.setString(
+      'categorias',
+      jsonEncode(listaDeCategorias.map((c) => c.toJson()).toList()),
+    );
+    await prefs.setString(
+      'transaccionesRecurrentes',
+      jsonEncode(
+        listaDeTransaccionesRecurrentes.map((t) => t.toJson()).toList(),
+      ),
+    );
   }
 
   Future<void> _cargarDatos() async {
@@ -499,28 +649,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     final gastosJson = prefs.getString('gastos');
     if (gastosJson != null) {
-      listaDeGastos = (jsonDecode(gastosJson) as List).map((json) => Gasto.fromJson(json)).toList();
+      listaDeGastos = (jsonDecode(gastosJson) as List)
+          .map((json) => Gasto.fromJson(json))
+          .toList();
     } else {
       listaDeGastos = [];
     }
 
     final transaccionesJson = prefs.getString('transacciones');
     if (transaccionesJson != null) {
-      listaDeTransacciones = (jsonDecode(transaccionesJson) as List).map((json) => Transaccion.fromJson(json)).toList();
+      listaDeTransacciones = (jsonDecode(transaccionesJson) as List)
+          .map((json) => Transaccion.fromJson(json))
+          .toList();
     } else {
       listaDeTransacciones = [];
     }
 
     final categoriasJson = prefs.getString('categorias');
     if (categoriasJson != null) {
-      listaDeCategorias = (jsonDecode(categoriasJson) as List).map((json) => Categoria.fromJson(json)).toList();
+      listaDeCategorias = (jsonDecode(categoriasJson) as List)
+          .map((json) => Categoria.fromJson(json))
+          .toList();
     } else {
       listaDeCategorias = [];
     }
 
-    final transaccionesRecurrentesJson = prefs.getString('transaccionesRecurrentes');
+    final transaccionesRecurrentesJson = prefs.getString(
+      'transaccionesRecurrentes',
+    );
     if (transaccionesRecurrentesJson != null) {
-      listaDeTransaccionesRecurrentes = (jsonDecode(transaccionesRecurrentesJson) as List).map((json) => TransaccionRecurrente.fromJson(json)).toList();
+      listaDeTransaccionesRecurrentes =
+          (jsonDecode(transaccionesRecurrentesJson) as List)
+              .map((json) => TransaccionRecurrente.fromJson(json))
+              .toList();
     } else {
       listaDeTransaccionesRecurrentes = [];
     }
@@ -559,11 +720,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           esDiaCorrecto = hoy.day == transaccion.fechaInicio.day;
           break;
         case 'anual':
-          esDiaCorrecto = hoy.day == transaccion.fechaInicio.day && hoy.month == transaccion.fechaInicio.month;
+          esDiaCorrecto =
+              hoy.day == transaccion.fechaInicio.day &&
+              hoy.month == transaccion.fechaInicio.month;
           break;
       }
-      if (esDiaCorrecto && hoy.isAfter(transaccion.fechaInicio.subtract(const Duration(days: 1)))) {
-        final clave = 'transaccion_${transaccion.id}_${hoy.year}_${hoy.month}_${hoy.day}';
+      if (esDiaCorrecto &&
+          hoy.isAfter(
+            transaccion.fechaInicio.subtract(const Duration(days: 1)),
+          )) {
+        final clave =
+            'transaccion_${transaccion.id}_${hoy.year}_${hoy.month}_${hoy.day}';
         final prefs = await SharedPreferences.getInstance();
         final yaProcesado = prefs.getBool(clave) ?? false;
         if (!yaProcesado) {
@@ -615,14 +782,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _procesarIngresoRecurrente(TransaccionRecurrente transaccion, bool recibido) async {
+  void _procesarIngresoRecurrente(
+    TransaccionRecurrente transaccion,
+    bool recibido,
+  ) async {
     final hoy = DateTime.now();
-    final clave = 'transaccion_${transaccion.id}_${hoy.year}_${hoy.month}_${hoy.day}';
+    final clave =
+        'transaccion_${transaccion.id}_${hoy.year}_${hoy.month}_${hoy.day}';
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Marcar como procesado para este día
     await prefs.setBool(clave, true);
-    
+
     if (recibido) {
       // Crear transacción de ingreso
       final nuevaTransaccion = Transaccion(
@@ -633,31 +804,37 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         fecha: hoy,
         categoriaId: transaccion.categoriaId,
       );
-      
+
       setState(() {
         listaDeTransacciones.add(nuevaTransaccion);
         saldoDisponible += transaccion.monto;
       });
-      
+
       await _guardarDatos();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Ingreso recurrente registrado: ${formatoMoneda(transaccion.monto)}'),
+          content: Text(
+            'Ingreso recurrente registrado: ${formatoMoneda(transaccion.monto)}',
+          ),
           backgroundColor: Colors.green,
         ),
       );
     }
   }
 
-  void _procesarGastoRecurrente(TransaccionRecurrente transaccion, bool pagado) async {
+  void _procesarGastoRecurrente(
+    TransaccionRecurrente transaccion,
+    bool pagado,
+  ) async {
     final hoy = DateTime.now();
-    final clave = 'transaccion_${transaccion.id}_${hoy.year}_${hoy.month}_${hoy.day}';
+    final clave =
+        'transaccion_${transaccion.id}_${hoy.year}_${hoy.month}_${hoy.day}';
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Marcar como procesado para este día
     await prefs.setBool(clave, true);
-    
+
     if (pagado) {
       // Crear transacción de gasto
       final nuevaTransaccion = Transaccion(
@@ -668,17 +845,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         fecha: hoy,
         categoriaId: transaccion.categoriaId,
       );
-      
+
       setState(() {
         listaDeTransacciones.add(nuevaTransaccion);
         saldoDisponible -= transaccion.monto;
       });
-      
+
       await _guardarDatos();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gasto recurrente registrado: ${formatoMoneda(transaccion.monto)}'),
+          content: Text(
+            'Gasto recurrente registrado: ${formatoMoneda(transaccion.monto)}',
+          ),
           backgroundColor: Colors.orange,
         ),
       );
@@ -735,7 +914,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   void _actualizarTransaccion(Transaccion transaccionActualizada) {
     setState(() {
-      final index = listaDeTransacciones.indexWhere((t) => t.id == transaccionActualizada.id);
+      final index = listaDeTransacciones.indexWhere(
+        (t) => t.id == transaccionActualizada.id,
+      );
       if (index != -1) {
         listaDeTransacciones[index] = transaccionActualizada;
         _guardarDatos();
@@ -748,7 +929,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       gasto.pagado = true;
     });
     _guardarDatos();
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Gasto marcado como pagado: ${gasto.nombre}'),
@@ -888,7 +1069,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-
   Widget _buildTransactionOption({
     required IconData icon,
     required String title,
@@ -902,7 +1082,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       builder: (context, child) {
         // Calcular el tamaño del patrón basado en la animación (más dramático)
         final patternSize = 15.0 + (10.0 * animationController.value);
-        
+
         return GestureDetector(
           onTapDown: (_) {
             animationController.forward();
@@ -922,7 +1102,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: color.withOpacity(0.8 + (0.2 * animationController.value)),
+                color: color.withOpacity(
+                  0.8 + (0.2 * animationController.value),
+                ),
                 width: 1 + (2 * animationController.value),
               ),
               // Gradiente radial que cambia con la animación
@@ -938,7 +1120,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               // Efecto de patrón usando boxShadow que cambia con la animación
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.073 + (0.1 * animationController.value)),
+                  color: color.withOpacity(
+                    0.073 + (0.1 * animationController.value),
+                  ),
                   blurRadius: patternSize,
                   spreadRadius: patternSize * 0.1,
                 ),
@@ -953,8 +1137,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Column(
               children: [
                 Icon(
-                  icon, 
-                  color: color.withOpacity(0.8 + (0.2 * animationController.value)), 
+                  icon,
+                  color: color.withOpacity(
+                    0.8 + (0.2 * animationController.value),
+                  ),
                   size: 32 + (8 * animationController.value),
                 ),
                 const SizedBox(height: 8),
@@ -962,7 +1148,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   title,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: color.withOpacity(0.8 + (0.2 * animationController.value)),
+                    color: color.withOpacity(
+                      0.8 + (0.2 * animationController.value),
+                    ),
                     fontSize: 14 + (4 * animationController.value),
                     letterSpacing: 0.5,
                   ),
@@ -1020,38 +1208,54 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void _crearTransaccion(Transaccion transaccion) {
     setState(() {
       listaDeTransacciones.add(transaccion);
-      
+
       // Actualizar saldo según el tipo de transacción
       if (transaccion.tipo == 'ingreso') {
         saldoDisponible += transaccion.monto;
       } else if (transaccion.tipo == 'gasto') {
         saldoDisponible -= transaccion.monto;
-      } else if (transaccion.tipo == 'ahorro' || transaccion.tipo == 'inversion') {
+      } else if (transaccion.tipo == 'ahorro' ||
+          transaccion.tipo == 'inversion') {
         saldoDisponible -= transaccion.monto;
       }
     });
 
     _guardarDatos();
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${transaccion.tipo.toUpperCase()} agregado exitosamente'),
-        backgroundColor: transaccion.tipo == 'ingreso' ? Colors.green : Colors.orange,
+        content: Text(
+          '${transaccion.tipo.toUpperCase()} agregado exitosamente',
+        ),
+        backgroundColor: transaccion.tipo == 'ingreso'
+            ? Colors.green
+            : Colors.orange,
       ),
     );
   }
 
-  void _crearTransaccionRecurrente(TransaccionRecurrente transaccionRecurrente) {
+  Future<void> _crearTransaccionRecurrente(
+    TransaccionRecurrente transaccionRecurrente,
+  ) async {
     setState(() {
       listaDeTransaccionesRecurrentes.add(transaccionRecurrente);
     });
 
-    _guardarDatos();
-    
+    await _guardarDatos();
+    await NotificationService.instance.scheduleRecurringTransactionNotification(
+      transaccionRecurrente,
+    );
+
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Transacción recurrente ${transaccionRecurrente.tipo.toUpperCase()} creada exitosamente'),
-        backgroundColor: transaccionRecurrente.tipo == 'ingreso' ? Colors.green : Colors.orange,
+        content: Text(
+          'Transacción recurrente ${transaccionRecurrente.tipo.toUpperCase()} creada exitosamente',
+        ),
+        backgroundColor: transaccionRecurrente.tipo == 'ingreso'
+            ? Colors.green
+            : Colors.orange,
       ),
     );
   }
@@ -1064,8 +1268,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // --- Widget Build Methods ---
 
   Widget _buildHomeTab(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: r'$', decimalDigits: 0);
-    
+    final currencyFormat = NumberFormat.currency(
+      locale: 'es_CO',
+      symbol: r'$',
+      decimalDigits: 0,
+    );
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
@@ -1081,7 +1289,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   // Transacciones recientes
                   _buildRecentTransactions(context),
-                  const SizedBox(height: 100), // Espacio extra para el botón flotante
+                  const SizedBox(
+                    height: 100,
+                  ), // Espacio extra para el botón flotante
                 ],
               ),
             ),
@@ -1098,20 +1308,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildGradientHeader(BuildContext context, NumberFormat currencyFormat) {
+  Widget _buildGradientHeader(
+    BuildContext context,
+    NumberFormat currencyFormat,
+  ) {
     // Calcular gastos del mes y del día
     final now = DateTime.now();
     final gastosDelMes = listaDeTransacciones
-        .where((t) => t.tipo == 'gasto' && 
-                     t.fecha.year == now.year && 
-                     t.fecha.month == now.month)
+        .where(
+          (t) =>
+              t.tipo == 'gasto' &&
+              t.fecha.year == now.year &&
+              t.fecha.month == now.month,
+        )
         .fold<double>(0.0, (sum, t) => sum + t.monto);
-    
+
     final gastosDelDia = listaDeTransacciones
-        .where((t) => t.tipo == 'gasto' && 
-                     t.fecha.year == now.year && 
-                     t.fecha.month == now.month &&
-                     t.fecha.day == now.day)
+        .where(
+          (t) =>
+              t.tipo == 'gasto' &&
+              t.fecha.year == now.year &&
+              t.fecha.month == now.month &&
+              t.fecha.day == now.day,
+        )
         .fold<double>(0.0, (sum, t) => sum + t.monto);
 
     return Container(
@@ -1132,16 +1351,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Row(
                       children: [
-                        Text('Personal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                        Text(
+                          'Personal',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                         SizedBox(width: 4),
-                        Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 16),
+                        Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                       ],
                     ),
                   ),
@@ -1196,7 +1428,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           children: [
                             Icon(Icons.logout, color: Colors.red),
                             SizedBox(width: 8),
-                            Text('Cerrar Sesión', style: TextStyle(color: Colors.red)),
+                            Text(
+                              'Cerrar Sesión',
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ],
                         ),
                       ),
@@ -1207,7 +1442,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Icon(Icons.person, color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -1216,8 +1455,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               // Balance principal
               Center(
                 child: Text(
-                  currencyFormat.format(saldoDisponible), 
-                  style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)
+                  currencyFormat.format(saldoDisponible),
+                  style: const TextStyle(
+                    fontSize: 42,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
               const SizedBox(height: 30),
@@ -1305,7 +1548,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBalanceCard(BuildContext context, String title, String amount, Color amountColor) {
+  Widget _buildBalanceCard(
+    BuildContext context,
+    String title,
+    String amount,
+    Color amountColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1344,11 +1592,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-
   Widget _buildRecentTransactions(BuildContext context) {
     // Agrupar transacciones por día
     Map<String, List<Transaccion>> transaccionesPorDia = {};
-    
+
     for (var transaccion in listaDeTransacciones) {
       final fechaKey = DateFormat('dd/MM/yyyy').format(transaccion.fecha);
       if (!transaccionesPorDia.containsKey(fechaKey)) {
@@ -1356,14 +1603,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
       transaccionesPorDia[fechaKey]!.add(transaccion);
     }
-    
+
     // Ordenar fechas de más reciente a más antigua
     final fechasOrdenadas = transaccionesPorDia.keys.toList()
-      ..sort((a, b) => DateFormat('dd/MM/yyyy').parse(b).compareTo(DateFormat('dd/MM/yyyy').parse(a)));
-    
+      ..sort(
+        (a, b) => DateFormat(
+          'dd/MM/yyyy',
+        ).parse(b).compareTo(DateFormat('dd/MM/yyyy').parse(a)),
+      );
+
     // Tomar solo los primeros 3 días
     final fechasParaMostrar = fechasOrdenadas.take(3).toList();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1380,7 +1631,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           final diaSemana = DateFormat('EEEE', 'es').format(fechaObj);
           final mesAno = DateFormat('MMMM yyyy', 'es').format(fechaObj);
           final transaccionesDelDia = transaccionesPorDia[fecha]!;
-          
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1399,7 +1650,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ...() {
                 final transaccionesOrdenadas = transaccionesDelDia.toList()
                   ..sort((a, b) => b.fecha.compareTo(a.fecha));
-                return transaccionesOrdenadas.map((transaction) => _buildTransactionItem(context, transaction));
+                return transaccionesOrdenadas.map(
+                  (transaction) => _buildTransactionItem(context, transaction),
+                );
               }(),
             ],
           );
@@ -1412,27 +1665,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final isIncome = transaction.tipo == 'ingreso';
     final amountColor = isIncome ? Theme.of(context).primaryColor : Colors.red;
     final amountPrefix = isIncome ? '+' : '-';
-    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: r'$', decimalDigits: 0);
-    
+    final currencyFormat = NumberFormat.currency(
+      locale: 'es_CO',
+      symbol: r'$',
+      decimalDigits: 0,
+    );
+
     // Usar el icono de la categoría
     final iconData = _getIconForCategoria(transaction.categoriaId);
     final color = _getColorForCategoria(transaction.categoriaId);
-    
+
     String description;
-    
+
     // Mantener descripciones específicas para casos especiales, pero usar categoría como respaldo
-    if (transaction.descripcion.toLowerCase().contains('comida') || 
+    if (transaction.descripcion.toLowerCase().contains('comida') ||
         transaction.descripcion.toLowerCase().contains('restaurante')) {
       description = 'Restaurante local';
     } else if (transaction.descripcion.toLowerCase().contains('transporte') ||
-               transaction.descripcion.toLowerCase().contains('metro')) {
+        transaction.descripcion.toLowerCase().contains('metro')) {
       description = 'Metro';
     } else {
-      description = transaction.descripcion == 'Sin descripción' 
+      description = transaction.descripcion == 'Sin descripción'
           ? _obtenerNombreCategoria(transaction.categoriaId)
           : transaction.descripcion;
     }
-    
+
     return Dismissible(
       key: Key(transaction.id),
       direction: DismissDirection.endToStart,
@@ -1447,11 +1704,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: const Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.edit,
-              color: Colors.white,
-              size: 24,
-            ),
+            Icon(Icons.edit, color: Colors.white, size: 24),
             SizedBox(height: 4),
             Text(
               'Editar',
@@ -1503,11 +1756,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Icon(
-                iconData,
-                color: color,
-                size: 20,
-              ),
+              child: Icon(iconData, color: color, size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -1524,7 +1773,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    transaction.descripcion == 'Sin descripción' 
+                    transaction.descripcion == 'Sin descripción'
                         ? DateFormat('h:mm a', 'es').format(transaction.fecha)
                         : '${transaction.descripcion} - ${DateFormat('h:mm a', 'es').format(transaction.fecha)}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -1554,13 +1803,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final List<Widget> widgetOptions = <Widget>[
       IncomeReportScreen(
         key: ValueKey('income_${listaDeTransacciones.length}'),
-        listaDeTransacciones: listaDeTransacciones, 
-        listaDeCategorias: listaDeCategorias
+        listaDeTransacciones: listaDeTransacciones,
+        listaDeCategorias: listaDeCategorias,
       ), // Ingresos
       ExpensesReportScreen(
         key: ValueKey('expenses_${listaDeTransacciones.length}'),
-        listaDeTransacciones: listaDeTransacciones, 
-        listaDeCategorias: listaDeCategorias
+        listaDeTransacciones: listaDeTransacciones,
+        listaDeCategorias: listaDeCategorias,
       ), // Gastos
       _buildHomeTab(context), // Inicio
       const Center(child: Text('Tarjetas')), // Placeholder
@@ -1568,18 +1817,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: widgetOptions,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: widgetOptions),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           border: Border(
-            top: BorderSide(
-              color: Theme.of(context).dividerColor,
-              width: 1,
-            ),
+            top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
           ),
         ),
         child: SafeArea(
@@ -1601,10 +1844,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildNavItem(BuildContext context, IconData icon, String label, int index) {
+  Widget _buildNavItem(
+    BuildContext context,
+    IconData icon,
+    String label,
+    int index,
+  ) {
     final isSelected = _selectedIndex == index;
-    final color = isSelected ? Theme.of(context).primaryColor : Theme.of(context).textTheme.bodySmall?.color;
-    
+    final color = isSelected
+        ? Theme.of(context).primaryColor
+        : Theme.of(context).textTheme.bodySmall?.color;
+
     return GestureDetector(
       onTap: () => _onItemTapped(index),
       child: Padding(
@@ -1612,11 +1862,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
+            Icon(icon, color: color, size: 24),
             const SizedBox(height: 4),
             Text(
               label,
@@ -1639,7 +1885,8 @@ class ConfiguracionScreen extends StatefulWidget {
   final List<Gasto> listaDeGastos;
   final List<Categoria> listaDeCategorias;
   final List<TransaccionRecurrente> listaDeTransaccionesRecurrentes;
-  final Function(double, List<Gasto>, List<TransaccionRecurrente>) onDatosActualizados;
+  final Function(double, List<Gasto>, List<TransaccionRecurrente>)
+  onDatosActualizados;
 
   const ConfiguracionScreen({
     super.key,
@@ -1698,10 +1945,12 @@ class _FormularioGastoScreenState extends State<FormularioGastoScreen> {
 class FormularioRecurrenteScreen extends StatefulWidget {
   // ...
   @override
-  _FormularioRecurrenteScreenState createState() => _FormularioRecurrenteScreenState();
+  _FormularioRecurrenteScreenState createState() =>
+      _FormularioRecurrenteScreenState();
 }
 
-class _FormularioRecurrenteScreenState extends State<FormularioRecurrenteScreen> {
+class _FormularioRecurrenteScreenState
+    extends State<FormularioRecurrenteScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(appBar: AppBar(title: const Text("Formulario Recurrente")));
@@ -1711,7 +1960,8 @@ class _FormularioRecurrenteScreenState extends State<FormularioRecurrenteScreen>
 class FormularioGastoFijoScreen extends StatefulWidget {
   // ...
   @override
-  _FormularioGastoFijoScreenState createState() => _FormularioGastoFijoScreenState();
+  _FormularioGastoFijoScreenState createState() =>
+      _FormularioGastoFijoScreenState();
 }
 
 class _FormularioGastoFijoScreenState extends State<FormularioGastoFijoScreen> {
